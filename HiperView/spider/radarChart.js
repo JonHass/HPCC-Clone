@@ -58,6 +58,8 @@ function RadarChart(id, data, options, name) {
                 .range([0.3,0.2,0.1,0.2,0.3]);              
 
 
+
+
     var allAxis = (data[0].map(function(i, j){return i.axis})), //Names of each axis
         total = allAxis.length,                 //The number of different axes
         radius = Math.min(cfg.w/2, cfg.h/2),    //Radius of the outermost circle
@@ -101,7 +103,21 @@ function RadarChart(id, data, options, name) {
         var rScale = d3.scaleLinear()
             .range([0, radius])
             .domain([minValue, maxValue]);
-        
+
+
+    // remove axis
+
+    data = data.map(d=>{
+        let temp = d.filter(e=>e.axis!=="Job load");
+        temp.indexSamp = d.indexSamp;
+        temp.name = d.name;
+        return temp;
+    })
+
+    angleSlice = angleSlice.filter((d,i)=>i!==3)
+    angleSlice[3] = Math.PI/2
+
+
     /////////////////////////////////////////////////////////
     //////////// Create the container SVG and g /////////////
     /////////////////////////////////////////////////////////
