@@ -188,7 +188,7 @@ span.thumb {
 }
 
 .computeSig_start.timeBoxRunning {
-    stroke: black;
+    stroke: #3fc151;
     stroke-width: 1.5;
 }
 .computeSig_b {

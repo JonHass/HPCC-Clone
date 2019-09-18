@@ -78,7 +78,7 @@ let JobMap = function() {
         first = true;
         return jobMap;
     };
-    let colorCategory  = d3.scaleOrdinal().range(d3.schemeCategory20);
+    let colorCategory  = d3.scaleOrdinal().range(d3.range(2,13).map(d=>d3.interpolateGreys(d/14)));
     let colorBy = 'user';
     function colorFunc (key){
         switch (colorBy) {
@@ -179,11 +179,12 @@ let JobMap = function() {
     }
     let yscale,linkscale = d3.scaleSqrt().range([0.25,3]);
     let scaleNode = d3.scaleLinear();
-    jobMap.draw = function (timeStep){
+    jobMap.draw = function (timeStep_r){
+        timeStep = new Date(timeStep_r.toString());
         if (!timeStep)
             timeStep = new Date();
         timebox.text(timeStep.toLocaleTimeString())
-        yscale = d3.scaleLinear().domain([-1,user.length]).range([0,graphicopt.heightG()]);
+        yscale = d3.scaleLinear().domain([-1,user.length]).range([0,Math.min(graphicopt.heightG(),30*12)]);
         let deltey = yscale(1)-yscale(0);
         tableLayout.row.height = deltey;
         violiin_chart.graphicopt({height:tableLayout.row.height,color:(i)=>'black'});
@@ -224,6 +225,7 @@ let JobMap = function() {
 
         //job node
         let timerange = [d3.min(data,d=>new Date(d.submitTime)),timeStep];
+        console.log(timerange)
         timerange[0] = new Date(timerange[0].toDateString());
         timerange[1].setDate(timerange[1].getDate()+1);
         timerange[1] = new Date(timerange[1].toDateString());
@@ -262,7 +264,8 @@ let JobMap = function() {
                 temp.pop();
                 temp.push(new Date(d.startTime));
                 return spiral(temp);
-            })
+            }).style('stroke','#ffa328')
+
         ;
         jobNode_n.append('path')
             .attrs(
@@ -273,7 +276,7 @@ let JobMap = function() {
                 temp.pop();
                 temp.push(timeStep);
                 return spiral(temp);
-            })
+            }).attr('stroke','##3fc151')
         ;
         jobNode = jobNode.merge(jobNode_n);
 
@@ -669,9 +672,10 @@ let JobMap = function() {
             simulation.stop();
         linkdata = [];
         hosts.forEach(h=>h.user=[]);
+        user = current_userData().sort((a,b)=>b.unqinode.length-a.unqinode.length).filter((d,i)=>i<10);
         // tableData = {}
         Object.keys(tableData).forEach(k=>tableData[k].keep =false);
-
+        data=data.filter(d=>user.findIndex(e=>e.key===d.user)!==-1)
         data.forEach(d=>{
           d.name = d.jobID+'';
           d.type = 'job';
@@ -696,7 +700,8 @@ let JobMap = function() {
 
 
         let newdata = [];
-        user = current_userData().map((d,i)=>{
+
+        user = user.map((d,i)=>{
             d.name = d.key;
             d.order = i;
             d.orderlink = i;
@@ -766,7 +771,7 @@ let JobMap = function() {
                 delete tableData[k];
         });
 
-        handle_sort();
+        handle_sort(true);
 
         tableFooter[0] = {key:'userID',value:'Summary'}
         tableFooter[1] = {key:'hosts', value:hosts.filter(d=>d.user.length).length}
