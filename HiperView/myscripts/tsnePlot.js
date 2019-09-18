@@ -745,7 +745,7 @@ d3.Tsneplot = function () {
 
         const totalUser = userl.length;
 
-        const sh = 20;
+        const sh = 41;
         const sw = 150;
         const tickh = 6;
         const margin = {top:tickh/2,bottom:tickh/2,left:1,right:1};
@@ -796,7 +796,7 @@ d3.Tsneplot = function () {
             .attr('class','nodes alignRight')
             .text(d=>d.unqinode.length);
 
-        contain_n.append('td')
+        let newg = contain_n.append('td')
             .attr('class','user_timeline')
             .append('svg')
             .attrs({'height':sh+margin.top+margin.bottom,
@@ -804,6 +804,7 @@ d3.Tsneplot = function () {
             .append('g')
             .attr("transform", "translate("+margin.left+", "+margin.top+")");
 
+        newg.append('g').attr('class','gaxis').attr("transform", "translate(0, "+(-margin.top)+")");
 
         //update
 
@@ -816,6 +817,10 @@ d3.Tsneplot = function () {
         userli.select('.nodes') .text(d=>d.unqinode.length);
 
         let mini_timeline = panel_user.selectAll('.user_timeline').select('g');
+
+        mini_timeline.select('.gaxis').call(d3.axisTop(xscale)
+            .ticks(d3.timeDay.every(1)).tickSize(-sh)
+            .tickFormat("")).select('.domain').remove()
 
         let timeBox = mini_timeline.selectAll('line.timeBox')
             .data(d=>{

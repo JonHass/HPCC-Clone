@@ -1079,4 +1079,6 @@ path {
 	opacity: 0.2
 }
 
-
+.user_timeline .gaxis .tick {
+	stroke-dasharray: 2;
+}
