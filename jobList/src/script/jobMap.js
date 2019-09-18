@@ -54,7 +54,7 @@ let JobMap = function() {
                 height: graphicopt.height,
             }).call(d3.zoom().on("zoom", function () {
             g.attr("transform", d3.event.transform);
-        }));;
+        }));
         g = svg.append("g")
             .attr('class','pannel')
             .attr('transform',`translate(${graphicopt.margin.left},${graphicopt.margin.top})`);
