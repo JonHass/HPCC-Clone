@@ -745,8 +745,8 @@ d3.Tsneplot = function () {
 
         const totalUser = userl.length;
 
-        const sh = 30;
-        const sw = 150;
+        const sh = 40;
+        const sw = 250;
         const tickh = 6;
         const margin = {top:tickh/2,bottom:tickh/2,left:1,right:1};
         // let rangestartTime = d3.extent(jobList,d=>new Date (d.startTime));
@@ -790,11 +790,11 @@ d3.Tsneplot = function () {
             .attr('class','title')
             .text(d=>d.key);
         contain_n.append('td')
-            .attr('class','jobs alignRight')
-            .text(d=>d.values.length);
-        contain_n.append('td')
             .attr('class','nodes alignRight')
             .text(d=>d.unqinode.length);
+        contain_n.append('td')
+            .attr('class','jobs alignRight')
+            .text(d=>d.values.length);
 
         let newg = contain_n.append('td')
             .attr('class','user_timeline')
