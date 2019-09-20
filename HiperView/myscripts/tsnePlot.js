@@ -741,12 +741,13 @@ d3.Tsneplot = function () {
         panel_user.select('.search-wrapper').classed('empty',!userl.length);
 
         // userl.sort((a,b)=>b.values.length-a.values.length);
-        user_sortBY ('nodes',userl);
+        user_sortBY ('jobs',userl);
+        // user_sortBY ('nodes',userl);
 
         const totalUser = userl.length;
 
         const sh = 40;
-        const sw = 250;
+        const sw = 350;
         const tickh = 6;
         const margin = {top:tickh/2,bottom:tickh/2,left:1,right:1};
         // let rangestartTime = d3.extent(jobList,d=>new Date (d.startTime));
