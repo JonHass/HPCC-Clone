@@ -60,43 +60,74 @@ function RadarChart(id, data, options, name) {
 
 
 
+    // var allAxis = (data[0].map(function(i, j){return i.axis})), //Names of each axis
+    //     total = allAxis.length,                 //The number of different axes
+    //     radius = Math.min(cfg.w/2, cfg.h/2),    //Radius of the outermost circle
+    //     Format = d3.format(''),                //Percentage formatting
+    // //    angleSlice = Math.PI * 2 / total;       //The width in radians of each "slice"
+    //     angle1= Math.PI * 2 / total;
+    //     angle2= Math.PI * 2 / (total+4);
+    //     angleSlice = [];
+    //     angleSlice2 =[];
+    //     for (var i=0;i<total;i++){
+    //         if (i==0 || i==1 || i==2)       // Temperatures
+    //             angleSlice.push(angle2*(i-1));
+    //         else if (i==5 || i==6 || i==7 || i==8)  // Fan speeds
+    //             angleSlice.push(Math.PI/4.62+angle2*(i-1));
+    //         else if (i==9)  // Power consumption
+    //             angleSlice.push(Math.PI * 1.5);
+    //         else
+    //             angleSlice.push(angle1*(i-1));
+    //     }      //TOMMY DANG
+    // angleSlice[0] = Math.PI * 2 +angleSlice[0];
+    // var meanang = (angleSlice[0]-Math.PI * 2+ angleSlice[1])/2;
+    // var dismeanang = 0-(angleSlice[0]-Math.PI * 2);
+    // angleSlice2.push(angleSlice[0]);
+    // var temp = (angleSlice[0]-Math.PI * 2+ dismeanang/4);
+    // angleSlice2.push(temp<0?temp+Math.PI*2:temp);
+    // angleSlice2.push(meanang<0?meanang+Math.PI*2:meanang);
+    // temp = (angleSlice[1]- dismeanang/4);
+    // angleSlice2.push(temp<0?temp+Math.PI*2:temp);
+    //     for (var i=1;i<total;i++) {
+    //         var meanang = (angleSlice[i]+ angleSlice[(i+1)%total])/2;
+    //         var dismeanang = meanang-angleSlice[i];
+    //         angleSlice2.push(angleSlice[i]);
+    //         angleSlice2.push(angleSlice[i]+ dismeanang/4);
+    //         angleSlice2.push(meanang);
+    //         angleSlice2.push(angleSlice[(i+1)%total]- dismeanang/4);
+    //     }
     var allAxis = (data[0].map(function(i, j){return i.axis})), //Names of each axis
         total = allAxis.length,                 //The number of different axes
         radius = Math.min(cfg.w/2, cfg.h/2),    //Radius of the outermost circle
         Format = d3.format(''),                //Percentage formatting
-    //    angleSlice = Math.PI * 2 / total;       //The width in radians of each "slice"
+        //    angleSlice = Math.PI * 2 / total;       //The width in radians of each "slice"
         angle1= Math.PI * 2 / total;
-        angle2= Math.PI * 2 / (total+4);
-        angleSlice = [];
-        angleSlice2 =[];
-        for (var i=0;i<total;i++){
-            if (i==0 || i==1 || i==2)       // Temperatures
-                angleSlice.push(angle2*(i-1));
-            else if (i==5 || i==6 || i==7 || i==8)  // Fan speeds
-                angleSlice.push(Math.PI/4.62+angle2*(i-1));
-            else if (i==9)  // Power consumption
-                angleSlice.push(Math.PI * 1.5);
-            else    
-                angleSlice.push(angle1*(i-1));
-        }      //TOMMY DANG
-    angleSlice[0] = Math.PI * 2 +angleSlice[0];
-    var meanang = (angleSlice[0]-Math.PI * 2+ angleSlice[1])/2;
-    var dismeanang = 0-(angleSlice[0]-Math.PI * 2);
-    angleSlice2.push(angleSlice[0]);
-    var temp = (angleSlice[0]-Math.PI * 2+ dismeanang/4);
-    angleSlice2.push(temp<0?temp+Math.PI*2:temp);
-    angleSlice2.push(meanang<0?meanang+Math.PI*2:meanang);
-    temp = (angleSlice[1]- dismeanang/4);
-    angleSlice2.push(temp<0?temp+Math.PI*2:temp);
-        for (var i=1;i<total;i++) {
-            var meanang = (angleSlice[i]+ angleSlice[(i+1)%total])/2;
-            var dismeanang = meanang-angleSlice[i];
-            angleSlice2.push(angleSlice[i]);
-            angleSlice2.push(angleSlice[i]+ dismeanang/4);
-            angleSlice2.push(meanang);
-            angleSlice2.push(angleSlice[(i+1)%total]- dismeanang/4);
-        }
-
+    angle2= Math.PI * 2 / (total);
+    angleSlice = [];
+    angleSlice2 =[];
+    for (var i=0;i<total;i++){
+            angleSlice.push(angle2*(i));
+    }      //TOMMY DANG
+    angleSlice2 = angleSlice;
+    console.log(`total ${total} - ${angle2}`)
+    console.log(angleSlice2)
+    // angleSlice[0] = Math.PI * 2 +angleSlice[0];
+    // var meanang = (angleSlice[0]-Math.PI * 2+ angleSlice[1])/2;
+    // var dismeanang = 0-(angleSlice[0]-Math.PI * 2);
+    // angleSlice2.push(angleSlice[0]);
+    // var temp = (angleSlice[0]-Math.PI * 2+ dismeanang/4);
+    // angleSlice2.push(temp<0?temp+Math.PI*2:temp);
+    // angleSlice2.push(meanang<0?meanang+Math.PI*2:meanang);
+    // temp = (angleSlice[1]- dismeanang/4);
+    // angleSlice2.push(temp<0?temp+Math.PI*2:temp);
+    // for (var i=1;i<total;i++) {
+    //     var meanang = (angleSlice[i]+ angleSlice[(i+1)%total])/2;
+    //     var dismeanang = meanang-angleSlice[i];
+    //     angleSlice2.push(angleSlice[i]);
+    //     angleSlice2.push(angleSlice[i]+ dismeanang/4);
+    //     angleSlice2.push(meanang);
+    //     angleSlice2.push(angleSlice[(i+1)%total]- dismeanang/4);
+    // }
         //angleSlice2.push(angleSlice[0]);
 
     //Scale for the radius
@@ -114,8 +145,8 @@ function RadarChart(id, data, options, name) {
         return temp;
     })
 
-    angleSlice = angleSlice.filter((d,i)=>i!==3)
-    angleSlice[3] = Math.PI/2
+    // angleSlice = angleSlice.filter((d,i)=>i!==3)
+    // angleSlice[3] = Math.PI/2
 
 
     /////////////////////////////////////////////////////////
