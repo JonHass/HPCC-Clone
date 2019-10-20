@@ -43,7 +43,6 @@ function RadarChart(id, data, options, name) {
     // var arrC = arrColor.map((d,i)=>d3.scaleSequential(d3.interpolateRdYlBu)
     //     .domain([1, 0])(i/(arrColor.length-1)));
     var arrC = arrColor.map((d,i)=>'black');
-    console.log(arrC);
 
     maxValue =right;
 
@@ -109,8 +108,6 @@ function RadarChart(id, data, options, name) {
             angleSlice.push(angle2*(i));
     }      //TOMMY DANG
     angleSlice2 = angleSlice;
-    console.log(`total ${total} - ${angle2}`)
-    console.log(angleSlice2)
     // angleSlice[0] = Math.PI * 2 +angleSlice[0];
     // var meanang = (angleSlice[0]-Math.PI * 2+ angleSlice[1])/2;
     // var dismeanang = 0-(angleSlice[0]-Math.PI * 2);
@@ -145,8 +142,15 @@ function RadarChart(id, data, options, name) {
         return temp;
     })
 
-    // angleSlice = angleSlice.filter((d,i)=>i!==3)
+    angleSlice = angleSlice.filter((d,i)=>i!==3)
     // angleSlice[3] = Math.PI/2
+    angle2= Math.PI * 2 / (total-1);
+    angleSlice =[];
+    angleSlice2 =[];
+    for (var i=0;i<total-1;i++){
+        angleSlice.push(angle2*i);
+    }      //TOMMY DANG
+    angleSlice2 = angleSlice;
 
 
     /////////////////////////////////////////////////////////

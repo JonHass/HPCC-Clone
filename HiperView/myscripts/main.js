@@ -861,7 +861,7 @@ function processResult(r){
     obj.result.query_time = r.result.query_time;
     obj.data = {};
     obj.data.service={};
-    obj.data.service.host_name = r.data.service.host_name;
+    obj.data.service.host_name = r.data.service.host_name||r.data.service.hostname;
     obj.data.service.plugin_output = r.data.service.plugin_output
     return obj;
 }
@@ -965,7 +965,8 @@ function processData(str, serviceName) {
             a[2] = undefinedValue;
         }
         else{
-            var maxConsumtion = 3.2;  // over 100%
+            // var maxConsumtion = 3.2;  // over 100%
+            var maxConsumtion = 32;  // over 100%
             var arr4 =  str.split(" ");
             a[0] = +arr4[arr4.length-2]/maxConsumtion;
             a[1] = undefinedValue;
@@ -1056,12 +1057,12 @@ function plotResult(result) {
     // Check if we should reset the starting point
     if (firstTime) {
         currentMiliseconds = result.result.query_time;
-        hostfirst = result.data.service.host_name;
+        hostfirst = result.data.service.host_name || result.data.service.hostname;
         xTimeScale = d3.scaleLinear()
             .domain([0, maxstack-1]);
     }
     firstTime = false;
-    var name =  result.data.service.host_name;
+    var name =  result.data.service.host_name || result.data.service.hostname;
 
     query_time = result.result.query_time;  // for drawing current timeline in Summary panel
     currentHostname = name;
@@ -1512,7 +1513,7 @@ function requestService(count,serin) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     var result = processResult(JSON.parse(this.responseText));
-                    var name = result.data.service.host_name;
+                    var name = result.data.service.host_name || result.data.service.hostname;
                     hostResults[name][serviceListattr[serin]].push(result);
                     if (selectedService === serviceList[serin]) {
                         hostResults[name].arr = hostResults[name][serviceListattr[serin]];
@@ -1538,7 +1539,7 @@ function requestServiceInFlux(count,serin) {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     var result = processResult(JSON.parse(this.responseText));
-                    var name = result.data.service.host_name;
+                    var name = result.data.service.host_name || result.data.service.hostname;
                     hostResults[name][serviceListattr[serin]].push(result);
                     if (selectedService === serviceList[serin]) {
                         hostResults[name].arr = hostResults[name][serviceListattr[serin]];
@@ -1575,7 +1576,7 @@ function step (iteration, count){
             for (i = 0; i < iterationstep; i++) {
                 var result = simulateResults2(hosts[count].name, iteration, selectedService);
                 // Process the result
-                var name = result.data.service.host_name;
+                var name = hosts[count].name;
                 hostResults[name].arr.push(result);
                 //console.log(hosts[count].name+" "+hostResults[name]);
                 var result = simulateResults2(hosts[count].name, iteration, serviceList[0]);
