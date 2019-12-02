@@ -192,7 +192,7 @@ function newdatatoFormat (data){
         // let range = d3.extent(data,d=>d[variables[i]]);
         if (keys[k].r)
             range = serviceLists_or.find(d=>d.text===keys[k].r).sub[0].range;
-        const temp = {"text":k,"id":i,"enable":true,"sub":[{"text":k,"id":0,"enable":true,"idroot":i,"angle":i*2*Math.PI/(Object.keys(keys).length-1),"range":range}]};
+        const temp = {"text":k,"id":i,"enable":true,"sub":[{"text":k,"id":0,"enable":true,"idroot":i,"angle":i*2*Math.PI/(Object.keys(keys).length),"range":range}]};
         thresholds.push(range);
         serviceLists.push(temp);
     });

@@ -245,7 +245,7 @@ let JobMap = function() {
         });
 
         stepSizeslider.noUiSlider.on("change", function () {
-            timelineStep = +this.get() * (yscale.range()[1]/maxTimestep);
+            timelineStep = +this.get() * (yscale.range()[1]*1.5/maxTimestep);
             timelineScale.range([-timelineStep,0]);
             jobMap.drawComp();
         });
@@ -255,7 +255,7 @@ let JobMap = function() {
 
     function updateMaxTimestep(){
         stepSizeslider.noUiSlider.set(1);
-        timelineStep = (yscale.range()[1]/maxTimestep);
+        timelineStep = (yscale.range()[1]*1.5/maxTimestep);
         timelineScale.range([-timelineStep,0]);
         jobMap.drawComp();
     }
@@ -344,7 +344,7 @@ let JobMap = function() {
     function createRadar(datapoint, bg, newdata, customopt) {
         let size_w = customopt?(customopt.size?customopt.size:graphicopt.radaropt.w):graphicopt.radaropt.w;
         let size_h = customopt?(customopt.size?customopt.size:graphicopt.radaropt.h):graphicopt.radaropt.h;
-        let colorfill = (customopt&&customopt.colorfill)?0.5:false;
+        let colorfill = (customopt&&customopt.colorfill)?0.8:false;
         let radar_opt = {
             w: size_w,
             h: size_h,
@@ -512,7 +512,8 @@ let JobMap = function() {
 
 
         if (!runopt.compute.bundle) {
-            const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
+            // const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
+            const radaropt = {colorfill: colorfill};
             let datapoint;
             if (!runopt.suddenGroup) {
                 datapoint= bg.selectAll(".linkLinegg").interrupt().data(d => d.timeline.clusterarr.map((e,i) => {
@@ -531,6 +532,25 @@ let JobMap = function() {
                     return temp;
                 }),d=>d.name+d.timestep);
             }
+
+            // bg.selectAll("path.linegg").remove();
+            let dataline = bg.selectAll(".linegg").interrupt().data(d => d.timeline.line,d=>d.cluster+'_'+d.start).attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`);
+            dataline.interrupt().transition().duration(animation_time)
+                .attr('d',function(d){
+                    return d3.line().curve(d3.curveMonotoneX).x(function(d){return fisheye_scale.x(timelineScale(d))}).y(()=> scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start,d.end+1))});;
+            dataline.exit().remove();
+            dataline.enter().append('path')
+                .attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`)
+                .attr('d',function(d){
+                    return d3.line().curve(d3.curveMonotoneX).x(function(d){return fisheye_scale.x(timelineScale(d))}).y(()=> scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start,d.end+1))})
+                .merge(dataline)
+                .styles({
+                    stroke: d => colorFunc(d.cluster),
+                    'stroke-width': function (d) {
+                        return linkscale(d3.select(this.parentNode).datum().values_name.length)
+                    }
+                });
+
             // datapoint.exit().remove();
             if (animation_time) {
                 datapoint.exit().transition().duration(animation_time).style('opacity', 0).on('end', function () {
@@ -555,23 +575,6 @@ let JobMap = function() {
                 });
             bg.style('stroke-width', d => linkscale(d.values_name.length));
 
-            // bg.selectAll("path.linegg").remove();
-            let dataline = bg.selectAll(".linegg").interrupt().data(d => d.timeline.line,d=>d.cluster+'_'+d.start).attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`);
-            dataline.interrupt().transition().duration(animation_time)
-                .attr('d',function(d){
-                    return d3.line().curve(d3.curveMonotoneX).x(function(d){return fisheye_scale.x(timelineScale(d))}).y(()=> scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start,d.end+1))});;
-            dataline.exit().remove();
-            dataline.enter().append('path')
-                .attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`)
-                .attr('d',function(d){
-                    return d3.line().curve(d3.curveMonotoneX).x(function(d){return fisheye_scale.x(timelineScale(d))}).y(()=> scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start,d.end+1))})
-                .merge(dataline)
-                .styles({
-                    stroke: d => colorFunc(d.cluster),
-                    'stroke-width': function (d) {
-                        return linkscale(d3.select(this.parentNode).datum().values_name.length)
-                    }
-                });
 
             if (runopt.compute.jobOverlay) {
                 let jobtick = bg.selectAll(".jobtickg").data(d => linkdata);
@@ -779,12 +782,14 @@ let JobMap = function() {
 
     function updateaxis() {
         let bg = svg.selectAll('.computeSig');
-        let rangey = d3.extent(bg.data(),d=>d.y2===undefined?d.y:d.y2);
+        let rangey = [0,graphicopt.heightG()];
+        // let rangey = d3.extent(bg.data(),d=>d.y2===undefined?d.y:d.y2);
         let scale = d3.scaleTime().range([timelineScale(0),timelineScale(timelineScale.domain()[1])]).domain([first__timestep,last_timestep]);
 
         let axis = svg.select('.gNodeaxis')
             .classed('hide',false)
             .attr('transform',`translate(${bg.datum().x2||bg.datum().x},${rangey[0]})`);
+            // .attr('transform',`translate(${bg.datum().x2||bg.datum().x},${rangey[0]})`);
         let Maxis = axis.select('.gMainaxis')
             .call(d3.axisTop(scale).tickSize(rangey[0]-rangey[1]).tickFormat(multiFormat));
         Maxis.select('.domain').remove();
@@ -792,7 +797,7 @@ let JobMap = function() {
         mticks
             .transition().duration(animation_time).attr('transform',d=>`translate(${fisheye_scale.x(scale(d))},0)`);
         mticks.select('text').attr('dy','-0.5rem');
-        mticks.select('line').attr("vector-effect","non-scaling-stroke").style('stroke-width',0.1).styles({'stroke':'black','stroke-width':0.2,'stroke-dasharray':'1'})
+        mticks.select('line').attr("vector-effect","non-scaling-stroke").style('stroke-width',0.1).styles({'stroke':'black','stroke-width':0.1,'stroke-dasharray':'1,2','opacity':0.5})
 
         let Saxis = axis.select('.gSubaxis').classed('hide',true);
         if (fisheye_scale.x.focus) {
@@ -894,7 +899,8 @@ let JobMap = function() {
     function getsubfixcolormode(){
         return runopt.graphic.colorBy==='group'?'_no':undefined;
     }
-    let yscale,linkscale = d3.scaleSqrt().range([0.3,2]);
+    let yscale,linkscale = d3.scaleSqrt().range([2,3]);
+    // let yscale,linkscale = d3.scaleSqrt().range([0.3,2]);
     let scaleNode = d3.scaleLinear();
     let scaleNode_y = d3.scaleLinear();
     let scaleJob = d3.scaleLinear();
@@ -927,7 +933,7 @@ let JobMap = function() {
                     computers.data().forEach(d => d.y = d3.mean(temp_link.filter(e => e.source.name === d.name), f => f.target.y));
                     computers.data().sort((a, b) => a.y - b.y).forEach((d, i) => d.order = i);
                 }
-                g.select('.host_title').attrs({'text-anchor': "end", 'x': 300, 'dy': -20}).text("Hosts's timeline");
+                g.select('.host_title').classed('hide',true).attrs({'text-anchor': "end", 'x': 300, 'dy': -20}).text("Hosts's timeline");
                 scaleNode_y_middle = d3.scaleLinear().range(yscale.range()).domain([0, computers.data().length - 1]);
 
                 g.selectAll('.computeNode.new').classed('new',false).attr('transform', d => {
@@ -936,9 +942,10 @@ let JobMap = function() {
                     // return `translate(${d.x2},${d.y2 || d.y})`
                     return `translate(${d.x2},0)`
                 }).style('opacity',0);
-                computers.transition().duration(animation_time).attr('transform', d => {
+                computers.transition().duration(animation_time).attr('transform', function(d) {
                     d.x2 = 300;
                     d.y2 = scaleNode_y_middle(d.order);
+                    d3.select(this).select('.computeSig_label').classed('hide',false).text(d=>d.name).attr('transform',`translate(${fisheye_scale.x(timelineScale(0))},${d.y2})`)
                     // return `translate(${d.x2},${d.y2 || d.y})`
                     return `translate(${d.x2},0)`
                 }).style('opacity',undefined);
@@ -1037,10 +1044,12 @@ let JobMap = function() {
                     return fullScaleB(masteb.orderscale[computeID]+masteb.offset);
                     // return fullScaleB(masteb.arr[ti][computeID]+masteb.offset);
                 };
-                computers.transition().duration(animation_time).attr('transform', d => {
+                computers.transition().duration(animation_time).attr('transform', function(d){
                     d.x2 = 300;
                     const lastItem = _.last(d.timeline.lineFull);
+                    const firstItem = d.timeline.lineFull[0];
                     d.y2 = scaleNode_y_middle(lastItem.cluster,lastItem.end,d.name);
+                    d3.select(this).select('.computeSig_label').classed('hide',false).text(d=>d.name).attr('transform',`translate(${fisheye_scale.x(timelineScale(0))},${scaleNode_y_middle(firstItem.cluster,firstItem.end,d.name)})`)
                     d.y = 0;
                     return `translate(${d.x2},0)`
                 });

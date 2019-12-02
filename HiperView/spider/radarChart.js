@@ -596,14 +596,14 @@ function RadarChart(id, data, options, name) {
             .style("fill-opacity", (d,i)=>cfg.fillin?cfg.fillin:null)
             .style("fill", (d,i)=>cfg.fillin?cfg.color(i,d):"none")
             .style("stroke-width", () => cfg.strokeWidth + "px")
-            .style("stroke-opacity", d => cfg.bin ? densityscale(d.bin.val.length) : 0.5)
+            .style("stroke-opacity", d => cfg.bin ? densityscale(d.bin.val.length) : 1)
             .style("stroke", (d, i) => cfg.color(i,d));
         //Create the outlines
         blobWrapper.append("path")
             .attr("class", "radarStroke")
             .attr("d", d => radarLine(d))
             .style("stroke-width", () => cfg.strokeWidth + "px")
-            .style("stroke-opacity", d => cfg.bin ? densityscale(d.bin.val.length) : 0.5)
+            .style("stroke-opacity", d => cfg.bin ? densityscale(d.bin.val.length) : 1)
             .style("stroke", (d, i) => cfg.color(i,d))
             .style("fill-opacity", (d,i)=>cfg.fillin?cfg.fillin:null)
             .style("fill", (d,i)=>cfg.fillin?cfg.color(i,d):"none");
