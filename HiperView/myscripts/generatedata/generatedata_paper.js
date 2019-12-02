@@ -8,10 +8,10 @@ var ROW_MARK = Math.round(Math.random()*INSTANCE);
 if (TIMESTEP>10)
     COLLUM_MARK = Math.round(Math.random()*(TIMESTEP/5-1) +1 )*5;
 else
-    COLLUM_MARK = Math.round(Math.random()*(TIMESTEP-1) +1;
+    COLLUM_MARK = Math.round(Math.random()*(TIMESTEP-3)) +1;
 
 var instance_name = d3.range(0,INSTANCE).map(d=>'h'+d);
-var var_name = d3.range(0,10).map(d=>'m'+d);
+var var_name = d3.range(0,VARNUM).map(d=>'m'+d);
 
 var startTime = new Date('Jan 2019');
 var timescale = d3.scaleTime().domain([startTime,new Date(startTime+60*60*1000)]).range([0,1]);
@@ -26,24 +26,49 @@ var h_c = {};
 var h_r = {};
 
 instance_name.forEach(ins=>h_c[ins]=[Math.round(Math.random()*VARNUM)]);
-instance_name.forEach(ins=>h_r[ins]=[]);
+instance_name.forEach(ins=>h_r[ins]=[Math.round(Math.random()*VARNUM)]);
 
 console.log('COLLUM_MARK:'+COLLUM_MARK)
 instance_name.forEach(ins=>{
     d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
         var ti=ti_c+1;
-        if (Math.random()<0.2||ti===ROW_MARK)
+        if (Math.random()<0.2||ti===COLLUM_MARK)
             h_c[ins][ti] = Math.round(Math.random()*VARNUM);
         else
             h_c[ins][ti] = h_c[ins][ti-1];
 
     })
 });
+console.log('ROW_MARK:'+ROW_MARK);
+instance_name.forEach((ins,insi)=>{
+    d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
+        var ti=ti_c+1;
+        if (Math.random()<0.2||insi===ROW_MARK)
+            h_r[ins][ti] = Math.round(Math.random()*VARNUM);
+        else
+            h_r[ins][ti] = h_r[ins][ti-1];
+
+    })
+});
 
 d3.range(0,TIMESTEP).forEach(t=>{
-    instance_name.forEach(ins=>var_name.forEach(v=>{
-
+    csv_c += '\n'+timescale.invert(t)+','+instance_name.map(ins=>var_name.map((v,vi)=>{
+        return cluster[h_c[ins][t]][vi];
+    }));
+    csv_r += '\n'+timescale.invert(t)+','+instance_name.map(ins=>var_name.map((v,vi)=>{
+        return cluster[h_r[ins][t]][vi];
     }));
 });
+
+download_csv(csv_c,'b');
+download_csv(csv_r,'a');
+
+function download_csv(csv,task) {
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = `csvUserStudy_${INSTANCE}_${TIMESTEP}_${task}.csv`;
+    hiddenElement.click();
+}
 
 
