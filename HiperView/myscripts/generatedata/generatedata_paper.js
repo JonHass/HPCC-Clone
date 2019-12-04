@@ -20,7 +20,7 @@ set.forEach(INS=>{
         else
             COLLUM_MARK = Math.round(Math.random()*(TIMESTEP-3)) +1;
 
-        var instance_name = d3.range(0,INSTANCE).map(d=>'instance_'+d);
+        var instance_name = d3.range(0,INSTANCE).map(d=>''+(d+1));
         var var_name = ["CPU2 Temp","Inlet Temp","Memory usage","Fan1 speed","Fan2 speed","Fan3 speed","Fan4 speed","Power consumption","CPU1 Temp"];
 
         var startTime = new Date('Jan 01 2019 1:00:00');
@@ -40,13 +40,14 @@ set.forEach(INS=>{
 
         console.log('COLLUM_MARK:'+COLLUM_MARK);
         var MINSUB = Math.min(INSTANCE,TIMESTEP);
-        var LOWLIMIT_r = 0.2*INSTANCE;
-        var HIGHLIMIT_r = LOWLIMIT_r +  (2+Math.random()*4);
+        var LOWLIMIT_r = 0.2*INSTANCE+2;
+        var HIGHLIMIT_r = LOWLIMIT_r +  (2+Math.random()*3);
         var timeArr=d3.range(0,TIMESTEP).map(t=>{return {clusterc:[]}});
         instance_name.forEach(ins=>{
             d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
                 var ti=ti_c+1;
-                if (((Math.random()<(1/INSTANCE)&& timeArr[ti].clusterc.length<LOWLIMIT_r )||((Math.random()<(2/INSTANCE))&&ti===COLLUM_MARK&& timeArr[ti].clusterc.length<HIGHLIMIT_r))) {
+                // if (((Math.random()<(1/INSTANCE)&& timeArr[ti].clusterc.length<LOWLIMIT_r )||((Math.random()<(2/INSTANCE))&&ti===COLLUM_MARK&& timeArr[ti].clusterc.length<HIGHLIMIT_r))) {
+                if ((Math.random()<(0.09)&& timeArr[ti].clusterc.length<LOWLIMIT_r )||((Math.random()<(0.4)&&ti===COLLUM_MARK&& timeArr[ti].clusterc.length<HIGHLIMIT_r))) {
                     h_c[ins][ti] = Math.round(Math.random() * CLUSTERNUM);
                     if (h_c[ins][ti]!==_.last(timeArr[ti].clusterc))
                         timeArr[ti].clusterc.push(h_c[ins][ti]);
@@ -55,13 +56,13 @@ set.forEach(INS=>{
             })
         });
         console.log('ROW_MARK:'+ROW_MARK);
-        var LOWLIMIT_c = 0.2*TIMESTEP+1;
-        var HIGHLIMIT_c = LOWLIMIT_c +  (1+Math.random()*0.2);
+        var LOWLIMIT_c = 0.2*TIMESTEP+2;
+        var HIGHLIMIT_c = LOWLIMIT_c +  (2+Math.random()*3);
 
         instance_name.forEach((ins,insi)=>{
             d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
                 var ti=ti_c+1;
-                if ((Math.random()<(2/TIMES)&& h_r[ins].clusterc.length<LOWLIMIT_c)||((Math.random()<(10/TIMES))&&insi===ROW_MARK&& h_r[ins].clusterc.length<HIGHLIMIT_c)) {
+                if ((Math.random()<(0.109)&& h_r[ins].clusterc.length<LOWLIMIT_c)||((Math.random()<(0.4))&&insi===ROW_MARK&& h_r[ins].clusterc.length<HIGHLIMIT_c)) {
                     h_r[ins][ti] = Math.round(Math.random() * CLUSTERNUM);
                     if (h_r[ins][ti]!==_.last(h_r[ins].clusterc))
                         h_r[ins].clusterc.push(h_r[ins][ti]);
@@ -107,7 +108,7 @@ function generateobject(count,instance,timestep,task,type) {
                 type: "radiogroup",
                 name: `q${count}`,
                 title: task?"Find the most dynamic time point (the timestamps, when many instances change their status)":"Find the most dynamic instance (the instance that exhibits multiple statuses over time).",
-                choices: d3.range(0,instance).map(d=>`instance_${d}`),
+                choices: d3.range(0,instance).map(d=>`${d}`),
                 correctAnswer: "Group 2"
             }
         ]

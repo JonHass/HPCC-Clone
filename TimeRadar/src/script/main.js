@@ -563,6 +563,9 @@ function request(){
                 isanimation = true;
                 getData(_.last(hosts).name,lastIndex,true,true);
                 d3.select('#compDisplay_control').attr('disabled',null);
+                let control_jobdisplay = d3.select('#compDisplay_control');
+                control_jobdisplay.node().options.selectedIndex = 3;
+                control_jobdisplay.attr('disabled', '').dispatch('change');
             }
             if (graphicControl.mode===layout.HORIZONTAL)
                 drawsummarypoint(countarr);
@@ -1529,6 +1532,108 @@ function readFilecsv(file) {
             }
         })
     }, 0);
+}
+function getimageSurvey(){
+    var set = [30,10,50];
+    var q = d3.queue();
+    set.forEach(INS=> {
+        set.forEach(TIMES => {
+            q.defer(generatedataInput,INS,TIMES,0);
+        })
+    })
+        // set.forEach(INS => {
+        //     set.forEach(TIMES => {
+        //         q.defer(generatedataInput,INS,TIMES,1);
+        //     })
+        // })
+
+}
+function generatedataInput(INS,TIMES,TASK,callback) {
+
+
+
+        function loadata1(data) {
+            db = "csv";
+
+            newdatatoFormat(data);
+
+            inithostResults();
+            processResult = processResult_csv;
+            makedataworker();
+            initDataWorker();
+            // addDatasetsOptions()
+            MetricController.axisSchema(serviceFullList, true).update();
+            realTimesetting(false, "csv", true, data);
+            updateDatainformation(sampleS['timespan']);
+
+            sampleJobdata = [{
+                jobID: "1",
+                name: "1",
+                nodes: hosts.map(h=>h.name),
+                startTime: new Date(_.last(sampleS.timespan)-100).toString(),
+                submitTime: new Date(_.last(sampleS.timespan)-100).toString(),
+                user: "dummyJob"
+            }];
+
+            d3.select(".currentDate")
+                .text("" + (sampleS['timespan'][0]).toDateString());
+            recalculateCluster( {clusterMethod: 'leaderbin',bin:{startBinGridSize: 4,range: [5,10]}},function(){
+                cluster_info.forEach(d=>(d.arr=[],d.__metrics.forEach(e=>(e.minval=undefined,e.maxval=undefined))));
+                hosts.forEach(h=>sampleS[h.name].arrcluster = sampleS.timespan.map((t,i)=>{
+                    let axis_arr = _.flatten(serviceLists.map(a=> sampleS[h.name][serviceListattr[a.id]][i].map(v=> d3.scaleLinear().domain(a.sub[0].range)(v===null?undefined:v)||0)));
+                    let index = 0;
+                    let minval = Infinity;
+                    cluster_info.forEach((c,i)=>{
+                        const val = distance(c.__metrics.normalize,axis_arr);
+                        if(minval>val){
+                            index = i;
+                            minval = val;
+                        }
+                    });
+                    cluster_info[index].total = 1 + cluster_info[index].total||0;
+                    cluster_info[index].__metrics.forEach((m,i)=>{
+                        if (m.minval===undefined|| m.minval>axis_arr[i])
+                            m.minval = axis_arr[i];
+                        if (m.maxval===undefined|| m.maxval<axis_arr[i])
+                            m.maxval = axis_arr[i];
+                    });
+                    return index;
+                    // return cluster_info.findIndex(c=>distance(c.__metrics.normalize,axis_arr)<=c.radius);
+                }));
+                cluster_info.forEach(c=>c.mse = ss.sum(c.__metrics.map(e=>(e.maxval-e.minval)*(e.maxval-e.minval))));
+                cluster_map(cluster_info);
+                jobMap.clusterData(cluster_info).colorCluster(colorCluster);
+                radarChartclusteropt.schema = serviceFullList;
+                handle_clusterinfo();
+
+                if (!init)
+                    resetRequest();
+                preloader(false);
+            });
+        }
+
+        setTimeout(function(){
+            exit_warp();
+            preloader(true);
+
+            data = generateDataSurvey(INS,TIMES,TASK);
+            console.log(data)
+            loadata1(data);
+            let typev = 0;
+            setTimeout(function(){
+                saveSVG($('body')[0],`${INS}_${TIMES}_${TASK?'b':'a'}_${typev?'b':'l'}`,'svg','',false,'svg#jobmap')
+                setTimeout(function(){
+                    let control_jobdisplay = d3.select('#compDisplay_control');
+                    control_jobdisplay.node().options.selectedIndex = 6;
+                    control_jobdisplay.attr('disabled', '').dispatch('change');
+                    setTimeout(function(){
+                        let typev = 1;
+                        saveSVG($('body')[0],`${INS}_${TIMES}_${TASK?'b':'a'}_${typev?'b':'l'}`,'svg','',false,'svg#jobmap');
+                        callback(null);
+                    },1000);
+                },3000);
+            },2000);
+        },0);
 }
 
 $( document ).ready(function() {

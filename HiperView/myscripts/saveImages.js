@@ -89,13 +89,14 @@ function onSaveImage (){
 }
 
 // ulti function
-let saveSVG = function(event,name,type,prefix,zip){
+let saveSVG = function(event,name,type,prefix,zip,nodeName){
     let target = event.parentNode||event;
+    node = target.querySelector(nodeName||'.radarPlot');
     if (name==="")
         name = target.querySelector('.hostnameInTip').textContent.split(': ')[1];
     switch(type) {
         default:
-            const stringbold = serialize(target.querySelector('.radarPlot'), true);
+            const stringbold = serialize(node, true);
             if (zip)
                 return new Promise((y, n) => (y(saveInZip(stringbold, zip))));
             else
@@ -105,11 +106,11 @@ let saveSVG = function(event,name,type,prefix,zip){
         case 'jpg':
         case 'jpeg':
             if (zip)
-                return rasterize(target.querySelector('.radarPlot'), true).then(svgString => {
+                return rasterize(node, true).then(svgString => {
                     return saveInZip(svgString, zip);
                 });
             else
-                rasterize(target.querySelector('.radarPlot'), true).then(svgString=>
+                rasterize(node, true).then(svgString=>
                     save(svgString)); // passes Blob and filesize String to the callback
             break;
     }
