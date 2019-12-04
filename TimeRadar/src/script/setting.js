@@ -111,13 +111,10 @@ function generateDataSurvey(INS,TIMES,TASK){
     var VARNUM = 9;
     var CLUSTERNUM = cluster.length-1;
 
-    var COLLUM_MARK = Math.round(Math.random()*(TIMESTEP/5-1) +1 )*5;
-    var ROW_MARK = Math.round(Math.random()*(INSTANCE-1));
-    if (TIMESTEP>10)
-        COLLUM_MARK = Math.round(Math.random()*(TIMESTEP/5-1) +1 )*5;
-    else
-        COLLUM_MARK = Math.round(Math.random()*(TIMESTEP-3)) +1;
-
+    var ROW = TASK?TIMESTEP:INSTANCE;
+    var COLLUM = TASK?INSTANCE:TIMESTEP;
+    var MARK = Math.round(Math.random()*(ROW-1));
+    console.log('MARK: ',MARK)
     var instance_name = d3.range(0,INSTANCE).map(d=>''+(d+1));
     var var_name = ["CPU2 Temp","Inlet Temp","Memory usage","Fan1 speed","Fan2 speed","Fan3 speed","Fan4 speed","Power consumption","CPU1 Temp"];
 
@@ -126,59 +123,118 @@ function generateDataSurvey(INS,TIMES,TASK){
 
 // make header
     var listheader = ['timestamp'];
-    var csv_header = 'timestamp,'+instance_name.map(i=>var_name.map(v=>{listheader.push(`${i}-${v}`); return `${i}-${v}`}).join(',')).join(',');
-    var csv_c = csv_header;
-    var csv_r = csv_header;
 
 // generate data
-    var h_c = {};
-    var h_r = {};
+    var LOWLIMIT,HIGHLIMIT;
+    switch(COLLUM) {
+        case 10:
+            LOWLIMIT = 3;
+            HIGHLIMIT = 5;
+            break;
+        case 30:
+            LOWLIMIT = 6;
+            HIGHLIMIT = 10;
+            break;
+        case 50:
+            LOWLIMIT = 8;
+            HIGHLIMIT = 15;
+            break;
+        default:
+            LOWLIMIT = ROW/12;
+            HIGHLIMIT = ROW/6;
+            break;
+    }
+    function ranint(n){
+        return Math.round(Math.random()*n);
+    }
+    var matrix = d3.range(0,ROW).map((r)=>{
+        var clustern = r!==MARK?ranint(LOWLIMIT):HIGHLIMIT;
+        var randc = d3.range(0,clustern).map(d=>{
+            return{cnum:ranint(CLUSTERNUM),pos:ranint(COLLUM-3)+1};
+        }).sort((a,b)=>a.pos-b.pos);
+        console.log(randc.length)
+        if (r===MARK){
+            do {
+                var key = false;
+                var old = undefined;
+                randc.forEach(r => {
+                    if (r.cnum===old) {
+                        key=true;
+                        r.cnum = cc();
+                    }
+                    old = r.cnum;
 
-    instance_name.forEach(ins=>(h_c[ins]=[Math.round(Math.random()*CLUSTERNUM)],h_c[ins].clusterc=[h_c[ins][0]]));
-    instance_name.forEach(ins=>(h_r[ins]=[Math.round(Math.random()*CLUSTERNUM)],h_r[ins].clusterc=[h_r[ins][0]]));
+                    function cc() {
+                        let tem = ranint(CLUSTERNUM)
+                        while (tem === old)
+                            tem = ranint(CLUSTERNUM)
+                        return tem;
+                    }
+                })
+                old = undefined;
+                randc.forEach(r => {
+                    if (r.pos===old) {
+                        key = true;
+                        r.pos = cc();
+                    }
+                    old = r.pos;
 
-    console.log('COLLUM_MARK:'+COLLUM_MARK);
-    var MINSUB = Math.min(INSTANCE,TIMESTEP);
-    var LOWLIMIT_r = 0.2*INSTANCE+2;
-    var HIGHLIMIT_r = LOWLIMIT_r +  (2+Math.random()*3);
-    var timeArr=d3.range(0,TIMESTEP).map(t=>{return {clusterc:[]}});
-    instance_name.forEach(ins=>{
-        d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
-            var ti=ti_c+1;
-            // if (((Math.random()<(1/INSTANCE)&& timeArr[ti].clusterc.length<LOWLIMIT_r )||((Math.random()<(2/INSTANCE))&&ti===COLLUM_MARK&& timeArr[ti].clusterc.length<HIGHLIMIT_r))) {
-            if ((Math.random()<(0.09)&& timeArr[ti].clusterc.length<LOWLIMIT_r )||((Math.random()<(0.4)&&ti===COLLUM_MARK&& timeArr[ti].clusterc.length<HIGHLIMIT_r))) {
-                h_c[ins][ti] = Math.round(Math.random() * CLUSTERNUM);
-                if (h_c[ins][ti]!==_.last(timeArr[ti].clusterc))
-                    timeArr[ti].clusterc.push(h_c[ins][ti]);
-            }else
-                h_c[ins][ti] = h_c[ins][ti-1];
-        })
+                    function cc() {
+                        let tem = ranint(ranint(COLLUM - 3) + 1)
+                        while (tem === old)
+                            tem = ranint(ranint(COLLUM - 3) + 1)
+                        return tem;
+                    }
+                })
+                randc.sort((a, b) => a.pos - b.pos)
+            }while(key)
+        }else{
+            randc = _.uniqBy(randc,'pos')
+        }
+            return randc;
     });
-    console.log('ROW_MARK:'+ROW_MARK);
-    var LOWLIMIT_c = 0.2*TIMESTEP+2;
-    var HIGHLIMIT_c = LOWLIMIT_c +  (2+Math.random()*3);
 
-    instance_name.forEach((ins,insi)=>{
-        d3.range(0,TIMESTEP-1).forEach((t,ti_c)=>{
-            var ti=ti_c+1;
-            if ((Math.random()<(0.109)&& h_r[ins].clusterc.length<LOWLIMIT_c)||((Math.random()<(0.4))&&insi===ROW_MARK&& h_r[ins].clusterc.length<HIGHLIMIT_c)) {
-                h_r[ins][ti] = Math.round(Math.random() * CLUSTERNUM);
-                if (h_r[ins][ti]!==_.last(h_r[ins].clusterc))
-                    h_r[ins].clusterc.push(h_r[ins][ti]);
-            }else
-                h_r[ins][ti] = h_r[ins][ti-1];
-
-        })
-    });
+    if (!TASK){
+        var old=[];
+        matrix = d3.range(0,TIMESTEP).map(t=>d3.range(0,INSTANCE).map(i=>{
+            if (!t) {
+                old[i] = ranint(CLUSTERNUM);
+                return old[i];
+            }
+            if (matrix[i][0]&&t===matrix[i][0].pos){
+                old[i] = matrix[i].shift().cnum;
+            }
+                return old[i];
+        }));
+    }else{
+        var old=[];
+        matrix = d3.range(0,TIMESTEP).map(t=>d3.range(0,INSTANCE).map(i=>{
+            if (!t) {
+                old[i] = ranint(CLUSTERNUM);
+                return old[i];
+            }
+            if (matrix[t][0]&&i===matrix[t][0].pos){
+                old[i] = cc();
+                function cc (){
+                    let tem = ranint(CLUSTERNUM)
+                    while(tem===old[i])
+                        tem = ranint(CLUSTERNUM)
+                    return tem;
+                }
+                matrix[t].shift();
+            }
+            return old[i];
+        }));
+    }
 
     let output = [];
-    let selection = TASK?h_c:h_r;
+
     d3.range(0,TIMESTEP).forEach(t=>{
         let temp = {};
         temp[listheader[0]] = d3.isoFormat(timescale.invert(t));
-        instance_name.forEach(ins=>{
+        instance_name.forEach((ins,insi)=>{
             var_name.forEach((v,vi)=>{
-                temp[`${ins}-${v}`] = cluster[h_c[ins][t]][vi];
+                temp[`${ins}-${v}`] = cluster[matrix[t][insi]][vi];
             })
         })
         output.push(temp);
