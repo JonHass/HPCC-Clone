@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="../HiperView/css/materialize.css">
+    <script src="../HiperView/js/lodash.min.js"></script>
+    <script src="../HiperView/js/simple-statistics.min.js"></script>
+</head>
+<body>
+
+<div id = "violin">
+
+</div>
+<div id = "violin_total">
+
+</div>
+<!-- load the d3.js library -->
+<script src="../HiperView/js/d3.v4.js"></script>
+<script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+<script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+<script src="https://d3js.org/d3-timer.v1.min.js"></script>
+<script src="https://d3js.org/d3-force.v2.min.js"></script>
+<script src="../HiperView/js/d3.tip.js"></script>
+<script src="../HiperView/js/d3.scaleAdjust.js"></script>
+<script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-format.v1.min.js"></script>
+
+<script src="../HiperView/myscripts/violinChart.js"></script>
+<script src="../HiperView/myscripts/histChart.js"></script>
+
+<script>
+    srcpath = '../HiperView/';
+    // clean data
+    var sur;
+    // d3.csv(srcpath+"/data/survey/Results_class.csv",function(data){
+    d3.csv(srcpath+"/data/survey/Results_class_v2.csv",function(data){
+        var questionEndcode = [];
+        var set = [10,30,50];
+        set.forEach(ins=>{
+            set.forEach(time=>{
+                d3.range(0,2).forEach(ta=>{
+                    d3.range(0,2).forEach(ty=>{
+                        questionEndcode.push({
+                            ins:ins,
+                            time:ta,
+                            task: ta,
+                            ty: ty?'bundle':'radar',
+                            correct:0,
+                            timeData:[],
+                        })
+                    })
+                })
+            })
+        });
+        sur = data;
+        sur.forEach(d=>d.set = d3.range(0,36)
+            .map(q=>d['q'+q] = {ans: +d['q'+q].split(', ')[0].split('_')[1],time: +d['q'+q].split(', ')[1],task:!(q%4===0||(q-1)%4===0)}));
+        d3.csv(srcpath+"/data/survey/answer.csv",function(ans){
+            ans = ans.map(d=>d3.range(0,3).map(i=>d[i]).filter(i=>i!=="").map(i=>+i));
+            sur.forEach(s=>{
+                s.correctNum = 0;
+                s.set.forEach((a,i)=>{
+                    a.correct = ans[i].find(q=>q=== a.ans)!==undefined;
+                    // if(a.correct && (i%4||(i-1)%4))
+                    if(a.correct && !questionEndcode[i].task) //task a
+                    {
+                        s.correctNum++;
+                        questionEndcode[i].correct++;
+                    }
+                    questionEndcode[i].timeData.push(a.time);
+                })
+                s.correctRate = s.correctNum/36;
+            })
+            console.log(sur)
+            console.log('-----USER:');
+            console.log("#question: ",36/2)
+            console.log("MAX correct answer of 1 user: ",d3.max(sur,s=>s.correctNum))
+            console.log("MAX correct answer of 1 user %: ",d3.max(sur,s=>s.correctNum)/36*2*100)
+            console.log("q1: ",d3.quantile(sur.map(s=>s.correctNum).sort((a,b)=>a-b),0.25));
+            console.log("q3: ",d3.quantile(sur.map(s=>s.correctNum).sort((a,b)=>a-b),0.75));
+            console.log('-----VIS:');
+            console.log("TimeRadar correct: ");
+            console.log("--% answer correct: ",d3.sum(questionEndcode.filter(d=>!d.task&&d.ty==="radar"),d=>d.correct)/ (36/2/2*sur.length)*100)
+            console.log("Bundle correct: ");
+            console.log("--% answer correct: ",d3.sum(questionEndcode.filter(d=>!d.task&&d.ty==="bundle"),d=>d.correct)/ (36/2/2*sur.length)*100);
+
+
+
+            violiin_chart = d3.viiolinChart().graphicopt({width:160,height:25,margin: {top: 0, right: 30, bottom: 0, left: 30},middleAxis:{'stroke-width':0.5},ticks:{'stroke-width':0.5},tick:{visibile:false}})
+            // violiin_chart = d3.viiolinChart().graphicopt({width:160,height:25,margin: {top: 0, right: 30, bottom: 0, left: 30},opt:{dataformated:true},middleAxis:{'stroke-width':0.5},ticks:{'stroke-width':0.5},tick:{visibile:false}})
+            // console.log("Correct answer in task a: ",sur.filter((d,i)=>))
+            console.log(questionEndcode.filter(q=>!q.task))
+            console.log(questionEndcode.filter(q=>!q.task).map(d=>d.correct))
+            // violin
+            var histodram = {resolution:100};
+            var outlierMultiply = 1.5;
+            var data_by_task = questionEndcode.filter(q=>!q.task);
+            var time_by_task =data_by_task.map(d=>d.timeData.filter(e=>e));
+            var rangetime = d3.extent(_.flatten(time_by_task));
+            // var newdata = data_by_task.map(d=>handledata(d,rangetime));
+            var filteredData = time_by_task.map(d=>d);
+            var newdata = d3.range(0,3).map(ins=>d3.range(0,3).map(tim=>[filteredData[ins*6+tim*2],filteredData[ins*6+tim*2+1]]));
+            console.log( d3.range(0,3).map(ins=>d3.range(0,3).map(tim=>[ins*6+tim,ins*6+tim+1])))
+            console.log(newdata)
+            violiin_chart.graphicopt({customrange:[0,60]});
+            var ins_div = d3.select('#violin').selectAll('div.row')
+                .data(newdata).enter().append('div').attr('class','row');
+            var time_div =ins_div.selectAll('div.col')
+                .data(d=>d).enter().append('div').attr('class','col s4 valign-wrapper').styles({'padding-top':'20px','padding-bottom':'20px'});
+            time_div
+                .selectAll('svg').data(d=>d).enter().append('svg')
+                .attrs({'width':160,'height':25}).each(function(d){
+                violiin_chart.data([d]).setTicksDisplay([0,60]).draw(d3.select(this))
+            })
+
+
+            var correct_by_task =data_by_task.map(d=>d.correct);
+            violiin_chart.graphicopt({width:300,height:50});
+            var data_total = [[_.flatten(correct_by_task.filter((d,i)=>i%2===0)),_.flatten(filteredData.filter((d,i)=>i%2===0))],[_.flatten(correct_by_task.filter((d,i)=>i%2!==0)),_.flatten(filteredData.filter((d,i)=>i%2!==0))]];
+            var type_div = d3.select('#violin_total').selectAll('div.row').data(data_total)
+                .enter().append('div').attr('class','row');
+            var at_div = type_div.selectAll('div.col')
+                .data(d=>
+                    d.map((e,i)=>{e.type = i?'time':'ac'; return e})).enter().append('div').attr('class','col s4 valign-wrapper').styles({'padding-top':'20px','padding-bottom':'20px'});
+            at_div
+                .selectAll('svg').data((d,i)=>
+                [d])
+                .enter().append('svg')
+                .attrs({'width':300,'height':50}).each(function(d){
+                if (d.type =='time')
+                    violiin_chart.rangeY([0,0.10]).graphicopt({customrange:[0,60]}).setTicksDisplay([0,60])
+                else
+                    violiin_chart.rangeY([0,0.35]).graphicopt({customrange:[0,16]}).setTicksDisplay([0,16])
+                violiin_chart.data([d]).draw(d3.select(this))
+            });
+
+
+            function handledata(d,rangex){
+                    d=d.filter(e=>e!==undefined).sort((a,b)=>a-b);
+                    let r;
+                    if (d.length){
+                        var x = d3.scaleLinear()
+                            .domain(rangex||d3.extent(d));
+                        var histogram = d3.histogram()
+                            .domain(x.domain())
+                            .thresholds(x.ticks(histodram.resolution))    // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
+                            .value(d => d);
+                        let hisdata = histogram(d);
+
+                        let sumstat = hisdata.map((d,i)=>[d.x0+(d.x1-d.x0)/2,(d||[]).length]);
+                        r = {
+                            q1: ss.quantileSorted(d,0.25) ,
+                            q3: ss.quantileSorted(d,0.75),
+                            median: ss.medianSorted(d) ,
+                            // outlier: ,
+                            arr: sumstat};
+                        if (d.length>4)
+                        {
+                            const iqr = r.q3-r.q1;
+                            r.outlier = _.uniq(d.filter(e=>e>(r.q3+outlierMultiply*iqr)||e<(r.q1-outlierMultiply*iqr)));
+                        }else{
+                            r.outlier =  _.uniq(d);
+                        }
+                    }else{
+                        r = {
+                            q1: undefined ,
+                            q3: undefined,
+                            median: undefined ,
+                            outlier: [],
+                            arr: []};
+                    }
+                    return r;
+            }
+
+        })
+    })
+</script>
+</body>
+</html>

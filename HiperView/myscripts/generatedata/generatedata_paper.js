@@ -98,8 +98,16 @@ set.forEach(INS => {
 })
 
 
+<<<<<<< Updated upstream
 function generateobject(instance, timestep, task, type) {
     return {
+=======
+
+// anh Vinh
+
+function generateobject(count,instance,timestep,task,type) {
+    return  {
+>>>>>>> Stashed changes
         questions: [
             {
                 type: "dropdown",
@@ -119,6 +127,7 @@ function generateobject(instance, timestep, task, type) {
 
 var set = [10, 30, 50];
 var question = [];
+<<<<<<< Updated upstream
 set.forEach(ins => {
     set.forEach(time => {
         d3.range(0, 2).forEach(ta => {
@@ -128,3 +137,75 @@ set.forEach(ins => {
         })
     })
 });
+=======
+var count = 0;
+set.forEach(ins=>{
+   set.forEach(time=>{
+       d3.range(0,2).forEach(ta=>{
+           d3.range(0,2).forEach(ty=>{
+               question.push( generateobject(count,ins,time,ta,ty))
+               count++;
+           })
+       })
+   })
+});
+
+// clean data
+var sur;
+d3.csv(srcpath+"/data/survey/Results_class.csv",function(data){
+    var questionEndcode = [];
+    var set = [10,30,50];
+    set.forEach(ins=>{
+        set.forEach(time=>{
+            d3.range(0,2).forEach(ta=>{
+                d3.range(0,2).forEach(ty=>{
+                    questionEndcode.push({
+                        ins:ins,
+                        time:ta,
+                        task: ta,
+                        ty: ty?'bundle':'radar',
+                        correct:0,
+                    })
+                })
+            })
+        })
+    });
+    sur = data;
+    sur.forEach(d=>d.set = d3.range(0,36)
+        .map(q=>d['q'+q] = {ans: +d['q'+q].split(', ')[0].split('_')[1],time: +d['q'+q].split(', ')[1],task:!(i%4===0||(i-1)%4===0)}));
+    d3.csv(srcpath+"/data/survey/answer.csv",function(ans){
+        ans = ans.map(d=>d3.range(0,3).map(i=>d[i]).filter(i=>i!=="").map(i=>+i));
+        sur.forEach(s=>{
+            s.correctNum = 0;
+            s.set.forEach((a,i)=>{
+                a.correct = ans[i].find(q=>q=== a.ans)!==undefined;
+                // if(a.correct && (i%4||(i-1)%4))
+                if(a.correct && !questionEndcode[i].task) //task a
+                {
+                    s.correctNum++;
+                    questionEndcode[i].correct++;
+                }
+                questionEndcode[i].timeData.push(a.time);
+            })
+            s.correctRate = s.correctNum/36;
+        })
+        console.log(sur)
+        console.log('-----USER:');
+        console.log("#question: ",36/2)
+        console.log("MAX correct answer of 1 user: ",d3.max(sur,s=>s.correctNum))
+        console.log("MAX correct answer of 1 user %: ",d3.max(sur,s=>s.correctNum)/36*2*100)
+        console.log("q1: ",d3.quantile(sur.map(s=>s.correctNum).sort((a,b)=>a-b),0.25));
+        console.log("q3: ",d3.quantile(sur.map(s=>s.correctNum).sort((a,b)=>a-b),0.75));
+        console.log('-----VIS:');
+        console.log("TimeRadar correct: ");
+        console.log("--% answer correct: ",d3.sum(questionEndcode.filter(d=>!d.task&&d.ty==="radar"),d=>d.correct)/ (36/2/2*sur.length)*100)
+        console.log("Bundle correct: ");
+        console.log("--% answer correct: ",d3.sum(questionEndcode.filter(d=>!d.task&&d.ty==="bundle"),d=>d.correct)/ (36/2/2*sur.length)*100);
+        violiin_chart = d3.viiolinChart().graphicopt({width:160,height:25,margin: {top: 0, right: 30, bottom: 0, left: 30},middleAxis:{'stroke-width':0.5},ticks:{'stroke-width':0.5},tick:{visibile:false}})
+        // console.log("Correct answer in task a: ",sur.filter((d,i)=>))
+        d3.select('#violin').selectAll('svg').data(questionEndcode.filter(q=>!q.task)).enter().append('svg').each(function(d){
+            violiin_chart.data(d.timeData).setTicksDisplay([0,sg.datum().data.range[1]]).draw(d3.select(this))
+        })
+    })
+})
+>>>>>>> Stashed changes

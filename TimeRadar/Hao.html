@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="../HiperView/css/materialize.css">
+    <script src="../HiperView/js/lodash.min.js"></script>
+    <script src="../HiperView/js/simple-statistics.min.js"></script>
+</head>
+<body>
+
+<div id = "violin">
+
+</div>
+<div id = "violin_total">
+
+</div>
+<!-- load the d3.js library -->
+<script src="../HiperView/js/d3.v4.js"></script>
+<script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+<script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+<script src="https://d3js.org/d3-timer.v1.min.js"></script>
+<script src="https://d3js.org/d3-force.v2.min.js"></script>
+<script src="../HiperView/js/d3.tip.js"></script>
+<script src="../HiperView/js/d3.scaleAdjust.js"></script>
+<script src="https://d3js.org/d3-selection-multi.v1.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-format.v1.min.js"></script>
+
+<script src="../HiperView/myscripts/violinChart.js"></script>
+<script src="../HiperView/myscripts/histChart.js"></script>
+
+<script>
+    srcpath = '../HiperView/';
+    // clean data
+    var sur;
+    // d3.csv(srcpath+"/data/survey/Results_class.csv",function(data){
+    d3.csv(srcpath+"/data/Hao/data_v2.csv",function(data){
+        sur = data;
+        var data_total = d3.range(0,3).map(d=>{
+            let ac = sur.map(e=>+e[`${d}_MSE`]);
+            ac.type = 'ac';
+            let time = sur.map(e=>+e[`${d}_Time`]);
+            time.type = 'time';
+            return [ac,time]
+        })
+        var range_ac = d3.extent(_.flatten(data_total.map(d=>d[0])));
+        var range_time = d3.extent(_.flatten(data_total.map(d=>d[1])));
+        violiin_chart = d3.viiolinChart().graphicopt({width:160,height:25,margin: {top: 0, right: 40, bottom: 0, left: 30},opt:{resolution:30},middleAxis:{'stroke-width':0.5},ticks:{'stroke-width':0.5},tick:{visibile:false}})
+        // violin
+
+        violiin_chart.graphicopt({width:300,height:50});
+
+        var type_div = d3.select('#violin_total').selectAll('div.row').data(data_total)
+            .enter().append('div').attr('class','row');
+        var at_div = type_div.selectAll('div.col')
+            .data(d=>d).enter().append('div').attr('class','col s4 valign-wrapper').styles({'padding-top':'0px','padding-bottom':'0px'});
+        at_div
+            .selectAll('svg').data((d,i)=>
+            [d])
+            .enter().append('svg')
+            .attrs({'width':300,'height':50}).each(function(d){
+            if (d.type ==='time')
+                violiin_chart.rangeY([0,4]).setkernel(0.2).graphicopt({customrange:range_time}).setTicksDisplay(range_time)
+            else
+                violiin_chart.rangeY([0,0.3]).setkernel(0.2).setkernel(1).graphicopt({customrange:[0,Math.ceil(range_ac[1])]}).setTicksDisplay([0,Math.ceil(range_ac[1])])
+            violiin_chart.data([d]).draw(d3.select(this))
+        });
+
+    })
+</script>
+</body>
+</html>
