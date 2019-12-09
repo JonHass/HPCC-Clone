@@ -517,6 +517,7 @@ let JobMap = function() {
     }
     let animation_time = 2000;
     function drawEmbedding_timeline(data,colorfill) {
+        animation_time = 2000
         // xscale
         let newdata = handledata(data);
         let bg = svg.selectAll('.computeSig');
