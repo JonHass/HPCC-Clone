@@ -98,16 +98,11 @@ set.forEach(INS => {
 })
 
 
-<<<<<<< Updated upstream
-function generateobject(instance, timestep, task, type) {
-    return {
-=======
 
 // anh Vinh
 
 function generateobject(count,instance,timestep,task,type) {
     return  {
->>>>>>> Stashed changes
         questions: [
             {
                 type: "dropdown",
@@ -127,7 +122,6 @@ function generateobject(count,instance,timestep,task,type) {
 
 var set = [10, 30, 50];
 var question = [];
-<<<<<<< Updated upstream
 set.forEach(ins => {
     set.forEach(time => {
         d3.range(0, 2).forEach(ta => {
@@ -137,18 +131,7 @@ set.forEach(ins => {
         })
     })
 });
-=======
-var count = 0;
-set.forEach(ins=>{
-   set.forEach(time=>{
-       d3.range(0,2).forEach(ta=>{
-           d3.range(0,2).forEach(ty=>{
-               question.push( generateobject(count,ins,time,ta,ty))
-               count++;
-           })
-       })
-   })
-});
+
 
 // clean data
 var sur;
