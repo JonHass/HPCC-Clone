@@ -1016,8 +1016,9 @@ let JobMap = function() {
                 });
                 computers.data().sort((a,b)=>a.order-b.order)
                     .forEach(c=>{
-                    c.arr.forEach((t,i)=>{
-                        const bi = bundle_cluster.findIndex(b=>b.cluster===t);
+                    // c.arr.forEach((t,i)=>{
+                    c.timeline[clusterkey].forEach((t,i)=>{
+                        const bi = bundle_cluster.findIndex(b=>b.cluster===t.cluster);
                         if (!bundle_cluster[bi].orderscale[c.name]){
                             bundle_cluster[bi].orderscale[c.name] = bundle_cluster[bi].orderscale._last;
                             bundle_cluster[bi].orderscale._last++;
@@ -1775,19 +1776,26 @@ let JobMap = function() {
                     ct.forEach(h => {
                         hostOb[h].arrcluster[ts] = c.name;
                         let currentarr = hostOb[h].timeline.clusterarr;
-                        if(runopt.suddenGroup && ts>0 && ts<maxstep && calculateMSE(hostOb[h].data[ts-1],hostOb[h].data[ts])>clusterdata.find(c=>c.name===hostOb[h].arrcluster[ts-1]).mse*runopt.suddenGroup ){
-                            hostOb[h].timeline.clusterarr_sudden.push({cluster: c.name, timestep: ts});
+                        if(runopt.suddenGroup) {
+                            if (ts==0||ts < maxstep && calculateMSE(hostOb[h].data[ts - 1], hostOb[h].data[ts]) > clusterdata.find(c => c.name === hostOb[h].arrcluster[ts - 1]).mse * runopt.suddenGroup) {
+                                hostOb[h].timeline.clusterarr_sudden.push({cluster: c.name, timestep: ts});
+                                hostOb[h].timeline.lineFull.push({cluster: c.name, start: ts, end: ts});
+                            } else {
+                                hostOb[h].timeline.lineFull[hostOb[h].timeline.lineFull.length - 1].end = ts;
+                            }
                         }
                         if (currentarr.length && c.name === hostOb[h].timeline.clusterarr[currentarr.length - 1].cluster) {
                             hostOb[h].timeline.clusterarr.stack++;
-                            hostOb[h].timeline.lineFull[hostOb[h].timeline.lineFull.length - 1].end = ts;
+                            if(!runopt.suddenGroup)
+                                hostOb[h].timeline.lineFull[hostOb[h].timeline.lineFull.length - 1].end = ts;
                             if (hostOb[h].timeline.clusterarr.stack === 1)
                                 hostOb[h].timeline.line.push({cluster: c.name, start: ts - 1, end: ts});
                             else if (hostOb[h].timeline.clusterarr.stack > 1)
                                 hostOb[h].timeline.line[hostOb[h].timeline.line.length - 1].end = ts;
                         } else {
                             hostOb[h].timeline.clusterarr.push({cluster: c.name, timestep: ts});
-                            hostOb[h].timeline.lineFull.push({cluster: c.name, start: ts, end: ts});
+                            if(!runopt.suddenGroup)
+                                hostOb[h].timeline.lineFull.push({cluster: c.name, start: ts, end: ts});
                             hostOb[h].timeline.clusterarr.stack = 0;
                         }
                     });
