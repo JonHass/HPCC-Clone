@@ -2910,7 +2910,7 @@
 	    // eslint-disable-next-line no-console
 	    if ((typeof console === 'undefined' ? 'undefined' : _typeof(console)) === 'object' && typeof console.log === 'function') {
 	        // eslint-disable-next-line no-console
-	        console.log('html2canvas ' + "$npm_package_version");
+	        // console.log('html2canvas ' + "$npm_package_version");
 	    }
 
 	    var config = conf || {};
