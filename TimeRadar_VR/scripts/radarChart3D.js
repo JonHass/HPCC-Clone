@@ -140,52 +140,52 @@ function RadarChart3D(id, data, options, name) {
     //Remove whatever chart with the same id/class was present before
     var first = false;
 
-    d3.select(id).selectAll("svg").nodes().forEach(d => {
-        if (!d3.select(d).classed("radar" + correctId (id)))
-            d3.select(d).remove();
-    });
+    // d3.select(id).selectAll("svg").nodes().forEach(d => {
+    //     if (!d3.select(d).classed("radar" + correctId (id)))
+    //         d3.select(d).remove();
+    // });
+    //
+    // //Initiate the radar chart SVG or update it
+    //
+    // var svg = d3.select(id).select(".radar" + correctId (id));
+    //
+    // function correctId (id){
+    //     if (typeof (id) === "string") {
+    //         return id.replace(".", "");
+    //     }else {
+    //         return "Gen"
+    //     }
+    // }
+    // var g = svg.select("#radarGroup");
+    // if (svg.empty()) {
+    //     first = true;
+    //     svg = d3.select(id).append("svg");
+    //     //Append a g element
+    //     g = svg.append("g")
+    //         .attr("id","radarGroup");
+    // }
+    // svg.attr("width", cfg.w + cfg.margin.left + cfg.margin.right)
+    //     .attr("height", cfg.h + cfg.margin.top + cfg.margin.bottom)
+    //     .attr("class", "radar" + correctId (id)  +" radarPlot");
+    // g.attr("transform", "translate(" + (cfg.w/2 + cfg.margin.left) + "," + (cfg.h/2 + cfg.margin.top) + ")");
 
-    //Initiate the radar chart SVG or update it
-
-    var svg = d3.select(id).select(".radar" + correctId (id));
-
-    function correctId (id){
-        if (typeof (id) === "string") {
-            return id.replace(".", "");
-        }else {
-            return "Gen"
-        }
-    }
-    var g = svg.select("#radarGroup");
-    if (svg.empty()) {
-        first = true;
-        svg = d3.select(id).append("svg");
-        //Append a g element
-        g = svg.append("g")
-            .attr("id","radarGroup");
-    }
-    svg.attr("width", cfg.w + cfg.margin.left + cfg.margin.right)
-        .attr("height", cfg.h + cfg.margin.top + cfg.margin.bottom)
-        .attr("class", "radar" + correctId (id)  +" radarPlot");
-    g.attr("transform", "translate(" + (cfg.w/2 + cfg.margin.left) + "," + (cfg.h/2 + cfg.margin.top) + ")");
-
-    if (cfg.showText) {
-        var temptest = svg.selectAll(".currentTimeText");
-        if (temptest.empty())
-            svg.append("text")
-            .attr("class", "currentTimeText")
-            .attr("x", 10)
-            .attr("y", 12)
-            .attr("fill", "#000")
-            .style("text-anchor", "start")
-            .style("font-weight", "bold")
-            .style("font-size", "12px")
-            .style("text-shadow", "1px 1px 0 rgba(255, 255, 255")
-            .attr("font-family", "sans-serif")
-            .text(name);
-        else
-            temptest.text(name);
-    }
+    // if (cfg.showText) {
+    //     var temptest = svg.selectAll(".currentTimeText");
+    //     if (temptest.empty())
+    //         svg.append("text")
+    //         .attr("class", "currentTimeText")
+    //         .attr("x", 10)
+    //         .attr("y", 12)
+    //         .attr("fill", "#000")
+    //         .style("text-anchor", "start")
+    //         .style("font-weight", "bold")
+    //         .style("font-size", "12px")
+    //         .style("text-shadow", "1px 1px 0 rgba(255, 255, 255")
+    //         .attr("font-family", "sans-serif")
+    //         .text(name);
+    //     else
+    //         temptest.text(name);
+    // }
     function toDegrees(rad) {
         let deg = rad * (180/Math.PI)%360;
         return deg;
@@ -193,20 +193,20 @@ function RadarChart3D(id, data, options, name) {
     function toRadian(deg) {
         return deg * (Math.PI/180);
     }
-    if (first&& !cfg.mini) {
-        //Filter for the outside glow
-        var filter = g.append('defs').append('filter').attr('id', 'glow'),
-            feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'coloredBlur'),
-            feMerge = filter.append('feMerge'),
-            feMergeNode_1 = feMerge.append('feMergeNode').attr('in', 'coloredBlur'),
-            feMergeNode_2 = feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
-        //Filter for the outside glow
-        var filter = g.append('defs').append('filter').attr('id', 'glow2'),
-            feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation', '1').attr('result', 'coloredBlur'),
-            feMerge = filter.append('feMerge'),
-            feMergeNode_1 = feMerge.append('feMergeNode').attr('in', 'coloredBlur'),
-            feMergeNode_2 = feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // if (first&& !cfg.mini) {
+    //     //Filter for the outside glow
+    //     var filter = g.append('defs').append('filter').attr('id', 'glow'),
+    //         feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'coloredBlur'),
+    //         feMerge = filter.append('feMerge'),
+    //         feMergeNode_1 = feMerge.append('feMergeNode').attr('in', 'coloredBlur'),
+    //         feMergeNode_2 = feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    //
+    //     //Filter for the outside glow
+    //     var filter = g.append('defs').append('filter').attr('id', 'glow2'),
+    //         feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation', '1').attr('result', 'coloredBlur'),
+    //         feMerge = filter.append('feMerge'),
+    //         feMergeNode_1 = feMerge.append('feMergeNode').attr('in', 'coloredBlur'),
+    //         feMergeNode_2 = feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
     //     const rg = svg.append("defs").append("radialGradient")
     //         .attr("id", "rGradient2");
@@ -229,119 +229,119 @@ function RadarChart3D(id, data, options, name) {
     // /////////////////////////////////////////////////////////
 
         //Wrapper for the grid & axes
-        var axisGrid = g.append("g").attr("class", "axisWrapper");
+        // var axisGrid = g.append("g").attr("class", "axisWrapper");
 
 
 
 
 
-    }
+    // }
     const angle_scale = d3.scaleLinear().domain(allAxis.map(d=>d.angle).sort((a,b)=>a-b)).range(d3.range(0,allAxis.length));
 
-    if (!cfg.mini) {
-        /////////////////////////////////////////////////////////
-        //////////////////// Draw the axes //////////////////////
-        /////////////////////////////////////////////////////////
-        var axisGrid = g.select(".axisWrapper");
-        axisGrid.on("touchmove mousemove", function() {
-            const dd = angle_scale( positiveAngle(Math.atan2(d3.mouse(this)[1] - 0, d3.mouse(this)[0] - 0)+Math.PI/2));
-            const val = allAxis[Math.round(dd)];
-            if (val) {
-                d3.selectAll('.axisWrapper .highlight').classed('highlight',false);
-                const target = d3.select(this).select("line.axis" + val.idroot + '_' + val.id);
-                target.dispatch('mouseover', {detail: target.node().parentNode});
-            }
-        });
-        //Draw the background circles
-        var levels = axisGrid.selectAll(".levels.gridCircle")
-            .data(d3.range(1, (cfg.levels + 1)).reverse());
-        levels.exit().remove();
-        levels.enter()
-            .append("circle")
-            .attr("class", "levels gridCircle")
-            .merge(levels)
-            .attr("r", function (d, i) {
-                return radius / cfg.levels * d;
-            })
-            .style("fill", "#CDCDCD")
-            .style("stroke", function (d) {
-                if (cfg.ringColor===undefined) {
-                    var v = (maxValue - minValue) * d / cfg.levels + minValue;
-                    return colorTemperature(v);
-                }
-                return cfg.ringColor;
-            })
-            .style("stroke-width", cfg.ringStroke_width===undefined?0.3:cfg.ringStroke_width)
-            .style("stroke-opacity", 1)
-            .style("fill-opacity", cfg.opacityCircles)
-            .style("filter", "url(#glow)")
-            .style("visibility", (d, i) => ((cfg.bin||cfg.gradient) && i == 0) ? "hidden" : "visible");
-
-
-        //Create the straight lines radiating outward from the center
-        var axis_o = axisGrid.selectAll(".axis")
-            .data(allAxis, d => d.text);
-
-        axis_o.exit().remove();
-
-        var axis_n = axis_o.enter()
-            .append("g")
-            .attr("class", "axis")
-            .style('transform-origin', '0,0');
-
-        axis_n.merge(axis_o)
-            .style('transform', function (d, i) {
-                return "rotate(" + toDegrees(d.angle) + "deg)"
-            });
-
-        //Append the lines
-        axis_n.append("line")
-            .attr("x1", 0)
-            .attr("y1", 0)
-            .attr("x2", 0);
-        axis_n.merge(axis_o).select('line')
-            .attr("y2", function (d, i) {
-                return -rScale(maxValue * (cfg.bin || cfg.gradient ? ((cfg.levels - 1) / cfg.levels) : 1.05));
-            })
-            .attr("class", d=>"line axis"+d.idroot+'_'+d.id)
-            .style("stroke", "white")
-            .style("stroke-width", "1px")
-            .on('mouseover',cfg.events.axis.mouseover)
-            .on('mouseleave',cfg.events.axis.mouseleave);
-
-        //Append the labels at each axis
-        if (cfg.showText) {
-            axis_n.append("text")
-                .attr("class", "legend")
-                .style("font-size", "12px")
-                .attr("font-family", "sans-serif")
-                .attr("text-anchor", "middle")
-                .attr("dy", "0.35em")
-                .attr("x", 0)
-                .merge(axis_o.select('.legend'))
-                // .classed('flip_h',(d,i)=>(d.angle>Math.PI*3/4)&&(d.angle<5*Math.PI/4))
-                .attr("y", function (d, i) {
-                    return -rScale(maxValue * cfg.labelFactor);
-                })
-                .text(function (d) {
-                    return d.text;
-                })
-                .call(wrap, cfg.wrapWidth);
-        }
-    }
+    // if (!cfg.mini) {
+    //     /////////////////////////////////////////////////////////
+    //     //////////////////// Draw the axes //////////////////////
+    //     /////////////////////////////////////////////////////////
+    //     var axisGrid = g.select(".axisWrapper");
+    //     axisGrid.on("touchmove mousemove", function() {
+    //         const dd = angle_scale( positiveAngle(Math.atan2(d3.mouse(this)[1] - 0, d3.mouse(this)[0] - 0)+Math.PI/2));
+    //         const val = allAxis[Math.round(dd)];
+    //         if (val) {
+    //             d3.selectAll('.axisWrapper .highlight').classed('highlight',false);
+    //             const target = d3.select(this).select("line.axis" + val.idroot + '_' + val.id);
+    //             target.dispatch('mouseover', {detail: target.node().parentNode});
+    //         }
+    //     });
+    //     //Draw the background circles
+    //     var levels = axisGrid.selectAll(".levels.gridCircle")
+    //         .data(d3.range(1, (cfg.levels + 1)).reverse());
+    //     levels.exit().remove();
+    //     levels.enter()
+    //         .append("circle")
+    //         .attr("class", "levels gridCircle")
+    //         .merge(levels)
+    //         .attr("r", function (d, i) {
+    //             return radius / cfg.levels * d;
+    //         })
+    //         .style("fill", "#CDCDCD")
+    //         .style("stroke", function (d) {
+    //             if (cfg.ringColor===undefined) {
+    //                 var v = (maxValue - minValue) * d / cfg.levels + minValue;
+    //                 return colorTemperature(v);
+    //             }
+    //             return cfg.ringColor;
+    //         })
+    //         .style("stroke-width", cfg.ringStroke_width===undefined?0.3:cfg.ringStroke_width)
+    //         .style("stroke-opacity", 1)
+    //         .style("fill-opacity", cfg.opacityCircles)
+    //         .style("filter", "url(#glow)")
+    //         .style("visibility", (d, i) => ((cfg.bin||cfg.gradient) && i == 0) ? "hidden" : "visible");
+    //
+    //
+    //     //Create the straight lines radiating outward from the center
+    //     var axis_o = axisGrid.selectAll(".axis")
+    //         .data(allAxis, d => d.text);
+    //
+    //     axis_o.exit().remove();
+    //
+    //     var axis_n = axis_o.enter()
+    //         .append("g")
+    //         .attr("class", "axis")
+    //         .style('transform-origin', '0,0');
+    //
+    //     axis_n.merge(axis_o)
+    //         .style('transform', function (d, i) {
+    //             return "rotate(" + toDegrees(d.angle) + "deg)"
+    //         });
+    //
+    //     //Append the lines
+    //     axis_n.append("line")
+    //         .attr("x1", 0)
+    //         .attr("y1", 0)
+    //         .attr("x2", 0);
+    //     axis_n.merge(axis_o).select('line')
+    //         .attr("y2", function (d, i) {
+    //             return -rScale(maxValue * (cfg.bin || cfg.gradient ? ((cfg.levels - 1) / cfg.levels) : 1.05));
+    //         })
+    //         .attr("class", d=>"line axis"+d.idroot+'_'+d.id)
+    //         .style("stroke", "white")
+    //         .style("stroke-width", "1px")
+    //         .on('mouseover',cfg.events.axis.mouseover)
+    //         .on('mouseleave',cfg.events.axis.mouseleave);
+    //
+    //     //Append the labels at each axis
+    //     if (cfg.showText) {
+    //         axis_n.append("text")
+    //             .attr("class", "legend")
+    //             .style("font-size", "12px")
+    //             .attr("font-family", "sans-serif")
+    //             .attr("text-anchor", "middle")
+    //             .attr("dy", "0.35em")
+    //             .attr("x", 0)
+    //             .merge(axis_o.select('.legend'))
+    //             // .classed('flip_h',(d,i)=>(d.angle>Math.PI*3/4)&&(d.angle<5*Math.PI/4))
+    //             .attr("y", function (d, i) {
+    //                 return -rScale(maxValue * cfg.labelFactor);
+    //             })
+    //             .text(function (d) {
+    //                 return d.text;
+    //             })
+    //             .call(wrap, cfg.wrapWidth);
+    //     }
+    // }
     /////////////////////////////////////////////////////////
     ///////////// Draw the radar chart blobs ////////////////
     /////////////////////////////////////////////////////////
 
-    if (cfg.bin) {
-        var densityscale = cfg.scaleDensity;
-        var scaleStroke = d3.scaleLinear()
-            .domain([0,1])
-            .range([0,5]);
-        data.forEach(d=> d.forEach((v,i)=> {
-            v.minval = d3.min(d.bin.val,e=>e[getindex(v)]);
-            v.maxval = d3.max(d.bin.val,e=>e[getindex(v)]);}));
-    }
+    // if (cfg.bin) {
+    //     var densityscale = cfg.scaleDensity;
+    //     var scaleStroke = d3.scaleLinear()
+    //         .domain([0,1])
+    //         .range([0,5]);
+    //     data.forEach(d=> d.forEach((v,i)=> {
+    //         v.minval = d3.min(d.bin.val,e=>e[getindex(v)]);
+    //         v.maxval = d3.max(d.bin.val,e=>e[getindex(v)]);}));
+    // }
     function getindex (v){
         return allAxis.findIndex(e=>e.text===v.axis);
     }
@@ -383,7 +383,252 @@ function RadarChart3D(id, data, options, name) {
             radialAreaGenerator.curve(d3.curveCardinalClosed.tension(this.smooth));
             radialAreaQuantile.curve(d3.curveCardinalClosed.tension(this.smooth));
         }
+    function transformSVGPath(pathStr) {
 
+        const DEGS_TO_RADS = Math.PI / 180,
+            UNIT_SIZE = 100;
+        const DIGIT_0 = 48,
+            DIGIT_9 = 57,
+            COMMA = 44,
+            SPACE = 32,
+            PERIOD = 46,
+            MINUS = 45;
+
+        var path = new THREE.ShapePath();
+        var idx = 1,
+            len = pathStr.length,
+            activeCmd,
+            x = 0,
+            y = 0,
+            nx = 0,
+            ny = 0,
+            firstX = null,
+            firstY = null,
+            x1 = 0,
+            x2 = 0,
+            y1 = 0,
+            y2 = 0,
+            rx = 0,
+            ry = 0,
+            xar = 0,
+            laf = 0,
+            sf = 0,
+            cx, cy;
+
+        function eatNum() {
+            var sidx, c, isFloat = false,
+                s;
+            // eat delims
+            while (idx < len) {
+                c = pathStr.charCodeAt(idx);
+                if (c !== COMMA && c !== SPACE)
+                    break;
+                idx++;
+            }
+            if (c === MINUS)
+                sidx = idx++;
+            else
+                sidx = idx;
+            // eat number
+            while (idx < len) {
+                c = pathStr.charCodeAt(idx);
+                if (DIGIT_0 <= c && c <= DIGIT_9) {
+                    idx++;
+                    continue;
+                } else if (c === PERIOD) {
+                    idx++;
+                    isFloat = true;
+                    continue;
+                }
+                s = pathStr.substring(sidx, idx);
+                return isFloat ? parseFloat(s) : parseInt(s);
+            }
+            s = pathStr.substring(sidx);
+            return isFloat ? parseFloat(s) : parseInt(s);
+        }
+
+        function nextIsNum() {
+            var c;
+            // do permanently eat any delims...
+            while (idx < len) {
+                c = pathStr.charCodeAt(idx);
+                if (c !== COMMA && c !== SPACE)
+                    break;
+                idx++;
+            }
+            c = pathStr.charCodeAt(idx);
+            return (c === MINUS || (DIGIT_0 <= c && c <= DIGIT_9));
+        }
+        var canRepeat;
+        activeCmd = pathStr[0];
+        while (idx <= len) {
+            canRepeat = true;
+            switch (activeCmd) {
+                // moveto commands, become lineto's if repeated
+                case 'M':
+                    x = eatNum();
+                    y = eatNum();
+                    path.moveTo(x, y);
+                    activeCmd = 'L';
+                    firstX = x;
+                    firstY = y;
+                    break;
+                case 'm':
+                    x += eatNum();
+                    y += eatNum();
+                    path.moveTo(x, y);
+                    activeCmd = 'l';
+                    firstX = x;
+                    firstY = y;
+                    break;
+                case 'Z':
+                case 'z':
+                    canRepeat = false;
+                    if (x !== firstX || y !== firstY)
+                        path.lineTo(firstX, firstY);
+                    break;
+                // - lines!
+                case 'L':
+                case 'H':
+                case 'V':
+                    nx = (activeCmd === 'V') ? x : eatNum();
+                    ny = (activeCmd === 'H') ? y : eatNum();
+                    path.lineTo(nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                case 'l':
+                case 'h':
+                case 'v':
+                    nx = (activeCmd === 'v') ? x : (x + eatNum());
+                    ny = (activeCmd === 'h') ? y : (y + eatNum());
+                    path.lineTo(nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                // - cubic bezier
+                case 'C':
+                    x1 = eatNum();
+                    y1 = eatNum();
+                case 'S':
+                    if (activeCmd === 'S') {
+                        x1 = 2 * x - x2;
+                        y1 = 2 * y - y2;
+                    }
+                    x2 = eatNum();
+                    y2 = eatNum();
+                    nx = eatNum();
+                    ny = eatNum();
+                    path.bezierCurveTo(x1, y1, x2, y2, nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                case 'c':
+                    x1 = x + eatNum();
+                    y1 = y + eatNum();
+                case 's':
+                    if (activeCmd === 's') {
+                        x1 = 2 * x - x2;
+                        y1 = 2 * y - y2;
+                    }
+                    x2 = x + eatNum();
+                    y2 = y + eatNum();
+                    nx = x + eatNum();
+                    ny = y + eatNum();
+                    path.bezierCurveTo(x1, y1, x2, y2, nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                // - quadratic bezier
+                case 'Q':
+                    x1 = eatNum();
+                    y1 = eatNum();
+                case 'T':
+                    if (activeCmd === 'T') {
+                        x1 = 2 * x - x1;
+                        y1 = 2 * y - y1;
+                    }
+                    nx = eatNum();
+                    ny = eatNum();
+                    path.quadraticCurveTo(x1, y1, nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                case 'q':
+                    x1 = x + eatNum();
+                    y1 = y + eatNum();
+                case 't':
+                    if (activeCmd === 't') {
+                        x1 = 2 * x - x1;
+                        y1 = 2 * y - y1;
+                    }
+                    nx = x + eatNum();
+                    ny = y + eatNum();
+                    path.quadraticCurveTo(x1, y1, nx, ny);
+                    x = nx;
+                    y = ny;
+                    break;
+                // - elliptical arc
+                case 'A':
+                    rx = eatNum();
+                    ry = eatNum();
+                    xar = eatNum() * DEGS_TO_RADS;
+                    laf = eatNum();
+                    sf = eatNum();
+                    nx = eatNum();
+                    ny = eatNum();
+                    if (rx !== ry) {
+                        console.warn("Forcing elliptical arc to be a circular one :(",
+                            rx, ry);
+                    }
+                    // SVG implementation notes does all the math for us! woo!
+                    // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+                    // step1, using x1 as x1'
+                    x1 = Math.cos(xar) * (x - nx) / 2 + Math.sin(xar) * (y - ny) / 2;
+                    y1 = -Math.sin(xar) * (x - nx) / 2 + Math.cos(xar) * (y - ny) / 2;
+                    // step 2, using x2 as cx'
+                    var norm = Math.sqrt(
+                        (rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1) /
+                        (rx * rx * y1 * y1 + ry * ry * x1 * x1));
+                    if (laf === sf)
+                        norm = -norm;
+                    x2 = norm * rx * y1 / ry;
+                    y2 = norm * -ry * x1 / rx;
+                    // step 3
+                    cx = Math.cos(xar) * x2 - Math.sin(xar) * y2 + (x + nx) / 2;
+                    cy = Math.sin(xar) * x2 + Math.cos(xar) * y2 + (y + ny) / 2;
+                    var u = new THREE.Vector2(1, 0),
+                        v = new THREE.Vector2((x1 - x2) / rx,
+                            (y1 - y2) / ry);
+                    var startAng = Math.acos(u.dot(v) / u.length() / v.length());
+                    if (u.x * v.y - u.y * v.x < 0)
+                        startAng = -startAng;
+                    // we can reuse 'v' from start angle as our 'u' for delta angle
+                    u.x = (-x1 - x2) / rx;
+                    u.y = (-y1 - y2) / ry;
+                    var deltaAng = Math.acos(v.dot(u) / v.length() / u.length());
+                    // This normalization ends up making our curves fail to triangulate...
+                    if (v.x * u.y - v.y * u.x < 0)
+                        deltaAng = -deltaAng;
+                    if (!sf && deltaAng > 0)
+                        deltaAng -= Math.PI * 2;
+                    if (sf && deltaAng < 0)
+                        deltaAng += Math.PI * 2;
+                    path.absarc(cx, cy, rx, startAng, startAng + deltaAng, sf);
+                    x = nx;
+                    y = ny;
+                    break;
+                default:
+                    throw new Error("weird path command: " + activeCmd);
+            }
+            // just reissue the command
+            if (canRepeat && nextIsNum())
+                continue;
+            activeCmd = pathStr[idx++];
+        }
+        return path;
+    }
+    return transformSVGPath(radarLine(data[0]));
     //Create a wrapper for the blobs
     var blobWrapperg = g.selectAll(".radarWrapper")
         .data(data);

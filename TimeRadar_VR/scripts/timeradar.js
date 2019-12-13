@@ -327,7 +327,7 @@ let TimeRadar3D = function() {
             //             return temp;
             //         });
             //         currentHost.radar.data.forEach((d,i)=>{
-            //             createRadar(currentHost.radar[i], currentHost, newdata, radaropt).style('display', d.hide ? "none" : undefined);
+            //             createRadar(currentHost.radar[i], currentHost, newdata, radaropt,currentHost.g);
             //         })
             //     }
             // } else {
@@ -417,7 +417,7 @@ let TimeRadar3D = function() {
         return d3.color(key===undefined?'black':colorCluster(key))+"";
     }
 
-    function createRadar(datapoint, bg, newdata, customopt) {
+    function createRadar(datapoint, bg, newdata, customopt,parent) {
         let size_w = customopt ? (customopt.size ? customopt.size : graphicopt.radaropt.w) : graphicopt.radaropt.w;
         let size_h = customopt ? (customopt.size ? customopt.size : graphicopt.radaropt.h) : graphicopt.radaropt.h;
         let colorfill = (customopt && customopt.colorfill) ? 0.8 : false;
@@ -435,18 +435,33 @@ let TimeRadar3D = function() {
             fillin: colorfill,
         };
 
-
-        if (!datapoint) { //create object
-            datapoint = new THREE.group();
-        }
-
-        // replace thumnail with radar mini
-
         if (colorfill)
             radar_opt.color = function () {
                 return colorFunc(d.name)
             };
-        RadarChart3D(datapoint, [d], radar_opt, "");
+        if (!datapoint) { //create object
+            datapoint = new THREE.Group();
+            parent.add(datapoint);
+            var shapepath  = RadarChart3D(datapoint, [d], radar_opt, "");
+            var simpleShape = shapepath.toShapes(true);
+            for (var i = 0; i < simpleShape.length; i++){
+                let shape3d = new THREE.BufferGeometry().setFromPoints(simpleShape[i].getPoints());
+                let line = new THREE.Line(shape3d, new THREE.LineBasicMaterial());
+                datapoint.add(line);
+            }
+        }else{
+            // todo update
+            // var shapepath  = RadarChart3D(datapoint, [d], radar_opt, "");
+            // var simpleShape = shapepath.toShapes(true);
+            // for (var i = 0; i < simpleShape.length; i++){
+            //     let shape3d = new THREE.BufferGeometry().setFromPoints(simpleShape[i].getPoints());
+            //     let line = new THREE.Line(shape3d, new THREE.LineBasicMaterial());
+            //     datapoint.add(line);
+            // }
+        }
+
+        // replace thumnail with radar mini
+
 
         return datapoint;
     }
