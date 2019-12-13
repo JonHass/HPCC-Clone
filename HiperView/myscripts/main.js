@@ -1942,32 +1942,6 @@ function requestRT(iteration,count) {
     });
 }
 var recordonly = false;
-function step (iteration, count){
-    if (isRealtime){
-            return requestRT(iteration,count);
-    }
-    else{
-        // var result = simulateResults(hosts[count].name);
-            var tmp = iteration;
-            for (i = 0; i < iterationstep; i++) {
-                var result = simulateResults2(hosts[count].name, iteration, selectedService);
-                // Process the result
-                var name = hosts[count].name;
-                hostResults[name].arr.push(result);
-                // console.log(hosts[count].name+" "+hostResults[name]);
-                serviceList_selected.forEach ((s)=>{
-                    var result = simulateResults2(hosts[count].name, iteration, serviceLists[s.index].text);
-                    hostResults[name][serviceListattr[s.index]].push(result);
-                });
-
-                plotResult(result, name,iteration);
-                iteration++;
-            }
-            iteration = tmp;
-        return [iteration, count];
-    }
-    //return [iteration, count];
-}
 
 
 d3.select("html").on("keydown", function() {

@@ -9,7 +9,7 @@ function initControlPanel()
 // service control panel init
 function initServiceControlPanel()
 {
-    var serviceCP = ["arrTemperatureCPU1", "arrCPU_load", "arrMemory_usage", "arrFans_speed1", "arrPower_usage"];
+    var serviceCP = ["arrTemperature__1", "arrCPU_load", "arrMemory_usage", "arrFans_health__1", "arrPower_usage"];
 
     var num = serviceCP.length ;
     var s = ROOM_SIZE * 0.25

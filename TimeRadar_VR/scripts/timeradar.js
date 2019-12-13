@@ -5,7 +5,7 @@ let TimeRadar3D = function() {
             deep: 1,
             presetPosition: undefined,
             radaropt:{}
-        }, runopt = {}, radarcreate,
+        }, runopt = {compute:{type:"timeline"}}, radarcreate,
         colorscale,
         g, first = true,
         dataRaw = [], data = [], arr = [],
@@ -25,8 +25,8 @@ let TimeRadar3D = function() {
     let scaleNode_y = d3.scaleLinear();
     //----------------------cluster----------------------
     let clusterdata,clusterdata_timeline;
-    let timelineStep = 20;
-    let timelineScale = d3.scaleLinear().range([-timelineStep,0]);
+    let timelineStep = -0.1;
+    let timelineScale = d3.scaleLinear().range([0,timelineStep]);
     //----------------------color----------------------
     // let colorCategory  = d3.scaleOrdinal().range(d3.schemeCategory20);
     let colorCluster  = d3.scaleOrdinal().range(d3.schemeCategory10);
@@ -71,7 +71,6 @@ let TimeRadar3D = function() {
                 h.timeline = {clusterarr: [], line: [], lineFull: [], clusterarr_sudden: []};
             }
         });
-
 
         updateClusterTimeline();
 
@@ -265,7 +264,7 @@ let TimeRadar3D = function() {
                     return `translate(${d.x2},0)`
                 });
             }
-            updateaxis();
+            // updateaxis();
         }else{
             computers.data().sort((a, b) => (b.arr[lastIndex]||[]).length - (a.arr[lastIndex]||[]).length).forEach((d, i) => d.order = i);// sort by temperal instance
             g.select('.host_title').attrs({'text-anchor':"middle",'x':300,'dy':-20}).text("Major host groups");
@@ -313,7 +312,7 @@ let TimeRadar3D = function() {
 
 
         if (!runopt.compute.bundle) {
-            const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
+            const radaropt = {colorfill: colorfill, size: 0.01};
             let datapoint;
             // if (!runopt.suddenGroup) {
             //     for (let h in hostsGroupObject) {
@@ -347,14 +346,16 @@ let TimeRadar3D = function() {
                 currentHost.line.data.forEach((d,i)=>{
                     if (currentHost.line[i]){ // update
                         currentHost.line[i].material.color = new THREE.Color( colorFunc(d.cluster) );
-                        currentHost.line[i].geometry.vertices[0] = new THREE.Vector3( fisheye_scale.x(timelineScale(d.start)), 0, 0); //start
-                        currentHost.line[i].geometry.vertices[1] = new THREE.Vector3( fisheye_scale.x(timelineScale(d.end)), 0, 0); //end
+                        currentHost.line[i].geometry.vertices[0] = new THREE.Vector3( 0,0,fisheye_scale.x(timelineScale(d.start)),0); //start
+                        currentHost.line[i].geometry.vertices[1] = new THREE.Vector3( 0,0, fisheye_scale.x(timelineScale(d.end)),0); //end
+                        currentHost.line[i].geometry.verticesNeedUpdate= true; //end
                     }else{ // create new
                         var material = new THREE.LineBasicMaterial( { color: colorFunc(d.cluster) } );
                         var geometry = new THREE.Geometry();
-                        geometry.vertices.push(new THREE.Vector3( fisheye_scale.x(timelineScale(d.start)), 0, 0)); //start
-                        geometry.vertices.push(new THREE.Vector3( fisheye_scale.x(timelineScale(d.end)), 0, 0));
+                        geometry.vertices.push(new THREE.Vector3(0,0, fisheye_scale.x(timelineScale(d.start)), 0)); //start
+                        geometry.vertices.push(new THREE.Vector3(0,0, fisheye_scale.x(timelineScale(d.end)), 0));
                         currentHost.line[i] = new THREE.Line( geometry, material );
+                        currentHost.line[i].linewidth =4
                         currentHost.g.add(currentHost.line[i]);
                     }
                 })
@@ -409,7 +410,7 @@ let TimeRadar3D = function() {
             //         }
             //     });
         }
-        updateaxis();
+        // updateaxis();
     }
 
     function colorFunc (key){

@@ -2363,62 +2363,6 @@ function recalculateCluster (option,calback) {
 
 }
 
-function recomendName (clusterarr){
-    clusterarr.forEach((c,i)=>{
-        c.index = i;
-        c.axis = [];
-        c.labels = ''+i;
-        c.name = `group_${i+1}`;
-        let zero_el = c.__metrics.filter(f=>!f.value);
-        let name='';
-        if (zero_el.length && zero_el.length<c.__metrics.normalize.length){
-            c.axis = zero_el.map(z=>{return{id:z.axis,description:'undefined'}});
-            name += `${zero_el.length} metric(s) undefined `;
-        }else if(zero_el.length===c.__metrics.normalize.length){
-            c.text = `undefined`;
-            if(!clusterDescription[c.name])
-                clusterDescription[c.name] = {};
-            clusterDescription[c.name].id = c.name;
-            clusterDescription[c.name].text = c.text;
-            return;
-        }
-        name += c.__metrics.filter(f=>f.value>0.75).map(f=>{
-            c.axis.push({id:f.axis,description:'high'});
-            return 'High '+f.axis;
-        }).join(', ');
-        name = name.trim();
-        if (name==='')
-            c.text = ``;
-        else
-            c.text = `${name}`;
-        if(!clusterDescription[c.name])
-            clusterDescription[c.name] = {};
-        clusterDescription[c.name].id = c.name;
-        clusterDescription[c.name].text = c.text;
-    });
-}
-
-function recomendColor (clusterarr) {
-    const colorCa = colorScaleList['customschemeCategory'].slice();
-    let colorcs = d3.scaleOrdinal().range(colorCa);
-    let colorarray = [];
-    let orderarray = [];
-    // clusterarr.filter(c=>!c.text.match('undefined'))
-    clusterarr.filter(c=>c.text!=='undefined')
-        .forEach(c=>{
-            colorarray.push(colorcs(c.name));
-            orderarray.push(c.name);
-        });
-    clusterarr.filter(c=>c.text==='undefined').forEach(c=>{
-        colorarray.push('black');
-        orderarray.push(c.name);
-    });
-    // clusterarr.filter(c=>c.text!=='undefined' && c.text.match('undefined')).forEach(c=>{
-    //     colorarray.push('#7f7f7f');
-    //     orderarray.push(c.name);
-    // });
-    colorCluster.range(colorarray).domain(orderarray)
-}
 function handle_clusterinfo () {
     let data_info = [['Grouping Method:',group_opt.clusterMethod]];
     d3.select(`#${group_opt.clusterMethod}profile`).selectAll('label').each(function(d,i) {

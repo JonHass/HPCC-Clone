@@ -38,6 +38,13 @@ function updateValues( timestamp )
 
         if( hostObj[rack][host] )
         {
+            let hname = `compute-${rack}-${host}`;
+            hostResults[hname].arr = hostResults[hname][selectedService.split('__')[0]].slice(0,timestamp);
+            let clusterid = sampleS[hname].arrcluster[time];
+            if(!cluster_info[clusterid].arr[time])
+                cluster_info[clusterid].arr[time] = [];
+            if (!cluster_info[clusterid].arr[time].find(d=>d===hname))
+                cluster_info[clusterid].arr[time].push(hname)
             updateHost( service, [rack,host,cpu,time], hostObj[rack][host][cpu] );
 
             // update scatterplot point per host (i.e. not per cpu)
@@ -91,12 +98,13 @@ function updateHost( service, keys, obj )
     var time = keys[3];
 
     var key1 = "compute-"+rack+"-"+host;
-    var key2 = service.includes("1") ? service.replace("1",cpu) : service;
+    var key2 = service.split('__')[0];
+    var key3 = service.includes("1") ? cpu-1 : 0;
 
-    if( json[key1][key2][time] !=null )
+    if( json[key1][key2][time][key3] !=null )
     {
         obj.visible = true;
-        obj.material.color = new THREE.Color( color(json[key1][key2][time]) );
+        obj.material.color = new THREE.Color( color(json[key1][key2][time][key3]) );
         updateCPUMarker( obj );
     }
     else
@@ -108,12 +116,7 @@ function updateHost( service, keys, obj )
 
 function updateColorRange( service )
 {
-    setColorsAndThresholdsTooltip( service.replace("arr","")
-                                        .replace("CPU1","")
-                                        .replace("CPU2","")
-                                        .replace("1","")
-                                        .replace("2","")
-                                        .replace("Power_usage","Power_consumption") );
+    setColorsAndThresholdsTooltip( serviceAttr[service.split('__')[0]].key );
 
     // var min = SERVICE[service]["dom"][0];
     // var max = SERVICE[service]["dom"][1];
@@ -319,7 +322,7 @@ function updateTooltip( host )
 
     tooltip.position.set(ROOM_SIZE*4,0,0);
 
-    rectip.datum({className:{baseVal:host_name}});
+    rectip.datum(host);
     $('#placetip').triggerSVGEvent('click');
     d3.select('#d3-tip').attr("position", "absolute")
         .style("top", "0px")

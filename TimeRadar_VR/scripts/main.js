@@ -25,12 +25,12 @@ var fillHost;
 var updateTimestamp;
 var move_timer;
 
-var SERVICE = { arrTemperatureCPU1: { key: "arrTemperatureCPU1", value: "Temperature1", dom: [0,98], sp_pos: 5 },
-                arrTemperatureCPU2: { key: "arrTemperatureCPU2", value: "Temperature2", dom: [0,98], sp_pos: 6 },
+var SERVICE = { arrTemperature__1: { key: "arrTemperature__1", value: "Temperature1", dom: [0,98], sp_pos: 5 },
+                arrTemperature__2: { key: "arrTemperature__2", value: "Temperature2", dom: [0,98], sp_pos: 6 },
                 arrCPU_load: { key: "arrCPU_load", value: "CPU_load", dom: [0,10], sp_pos: 0 },
                 arrMemory_usage: { key: "arrMemory_usage", value: "Memory_usage", dom: [0,99], sp_pos: 3 },
-                arrFans_speed1: { key: "arrFans_speed1", value: "Fans_speed1", dom: [1050,17850], sp_pos: 1 },
-                arrFans_speed2: { key: "arrFans_speed2", value: "Fans_speed2", dom: [1050,17850], sp_pos: 2 },
+                arrFans_health__1: { key: "arrFans_health__1", value: "Fans_speed1", dom: [1050,17850], sp_pos: 1 },
+                arrFans_health__2: { key: "arrFans_health__2", value: "Fans_speed2", dom: [1050,17850], sp_pos: 2 },
                 arrPower_usage: { key: "arrPower_usage", value: "Power_usage", dom: [0,200], sp_pos: 4 },
             };
 
@@ -107,18 +107,15 @@ if (isRealtime){
 var charType = "Heatmap";
 var undefinedValue = undefined;
 //***********************
-var serviceList = ["Temperature","CPU_load","Memory_usage","Fans_speed","Power_consumption"];
-var serviceList_selected = ["Temperature","CPU_load","Memory_usage","Fans_speed","Power_consumption"];
-var serviceListattr = ["arrTemperature","arrCPU_load","arrMemory_usage","arrFans_health","arrPower_usage","arrJob_scheduling"];
-var serviceAttr = {arrTemperature: {key: "Temperature", val: ["arrTemperatureCPU1","arrTemperatureCPU2"]},
-    arrCPU_load: {key: "CPU_load", val: ["arrCPU_load"]},
-    arrMemory_usage: {key: "Memory_usage", val: ["arrMemory_usage"]},
-    arrFans_health: {key: "Fans_speed", val: ["arrFans_speed1","arrFans_speed2"]},
-    arrPower_usage:{key: "Power_consumption", val: ["arrPower_usage"]}};
-var serviceQuery = ["temperature","cpu+load" ,"memory+usage" ,"fans+health" ,"power+usage"];
+let iterationstep = 1;
+let cluster_info;
+let clustercalWorker;
+let distance;
 var thresholds = [[3,98], [0,10], [0,99], [1050,17850],[0,200] ];
 var initialService = "Temperature";
-var selectedService = "arrTemperatureCPU1";
+var selectedService = "arrTemperature__1";
+var arrThresholds
+serviceList.pop()
 // let processResult = processResult_old;
 var isScagnostic = false;
 
@@ -134,7 +131,6 @@ var velocity = new THREE.Vector3();
 var direction = new THREE.Vector3();
 
 init();
-animate();
 
 function init()
 {
@@ -142,220 +138,135 @@ function init()
     document.body.appendChild( container );
 
     initD3();
-    loadJSON();
+    loadJSON(function(){
+        TS_NUM = json["compute-1-1"]["arrCPU_load"].length;
 
-    TS_NUM = json["compute-1-1"]["arrCPU_load"].length;
+        initScene();
+        initCamera();
+        initLight();
+        initInteractions();
 
-    initScene();
-    initCamera();
-    initLight();
-    initInteractions();
+        initRoom();
+        initControlPanel();
+        initQuanah();
+        initParallelSet();
+        initTimeRadar();
 
-    initRoom();
-    initControlPanel();
-    initQuanah();
-    initParallelSet();
-    initTimeRadar();
+        if(isScagnostic)
+            initScatterPlotMatrix();
 
-    if(isScagnostic)
-        initScatterPlotMatrix();
-
-    window.addEventListener( 'mousedown', onMouseDown, false );
-    window.addEventListener( 'touchstart', onDocTouch, false );
-    window.addEventListener( 'touchend', onDocRelease, false );
-    window.addEventListener( 'mousemove', onMouseMove, false );
+        window.addEventListener( 'mousedown', onMouseDown, false );
+        window.addEventListener( 'touchstart', onDocTouch, false );
+        window.addEventListener( 'touchend', onDocRelease, false );
+        window.addEventListener( 'mousemove', onMouseMove, false );
+        animate();
+    });
 
 }
 
-function loadJSON()
+function loadJSON(calback)
 {
-    srcpath = "HiperView"
+    srcpath = "../HiperView/"
     d3.json(srcpath+'data/hotslist_Quanah.json').then(function(data){
         hostList = data;
         inithostResults();
-        let choiceinit = d3.select('#datacom').node().value;
+        let choice = "influxdbSat27Apr";
 
-        if (choiceinit.includes('influxdb')) {
-            // processResult = processResult_influxdb;
+        if (choice.includes('influxdb')) {
             db = "influxdb";
             realTimesetting(false, "influxdb", true);
         } else {
             db = "nagios";
-            // processResult = processResult_old;
             realTimesetting(false, undefined, true);
         }
-        let choice = d3.select('#datacom').node().value;
-        dataInformation.filename = choice+".json";
         d3.json(srcpath+"data/" + choice + ".json").then(function (data) {
-            if (error) {
-                M.toast({html: 'Local data does not exist, try to query from the internet!'});
-                d3.json("https://media.githubusercontent.com/media/iDataVisualizationLab/HPCC/master/HiperView/data/" + choiceinit + ".json", function (error, data) {
-                    if (error) throw error;
-                    d3.select(".currentDate")
-                        .text("" + d3.timeParse("%d %b %Y")(d3.select('#datacom').select('[selected="selected"]').text()).toDateString());
-                    loadata(data)
-                });
-                return;
-            }
-            d3.select(".currentDate")
-                .text("" + (new Date(data['timespan'][0]).toDateString()));
-            d3.json(srcpath + "data/" + choice + "_job_compact.json", function (error, job) {
-                if (error) {
-                    loadata(data, undefined);
-                    return;
-                }
+            d3.json(srcpath + "data/" + choice + "_removemetric_job_compact.json").then(function (job) {
                 loadata(data, job);
-                return;
-            });
+            }).catch(err => loadata(data, undefined));
         })
-    });
-
-
-    let minTime = sampleS["compute-1-1"].arrTemperature[0].result.query_time;
-    let timescale = d3.scaleTime().range([0,sampleS['compute-1-1'].arrTemperature.length-1]).domain([new Date(sampleS["compute-1-1"].arrTemperature[0].result.query_time),new Date(sampleS["compute-1-1"].arrTemperature[sampleS["compute-1-1"].arrTemperature.length-1].result.query_time)]);
-    sampleS.timespan = d3.range(0,sampleS['compute-1-1'].arrTemperature.length).map(d=>timescale.invert(d));
-    json = {};
-
-    // loading data
-    for (var att in hostList.data.hostlist)
-    {
-        var h = {};
-        h.name = att;
-        h.hpcc_rack = +att.split("-")[1];
-        h.hpcc_node = +att.split("-")[2].split(".")[0];
-        h.index = hosts.length;
-
-        // to contain the historical query results
-        hostResults[h.name] = {};
-        hostResults[h.name].index = h.index;
-        hostResults[h.name].arr = [];
-        hostResults[h.name].arrTemperature = [];
-        hostResults[h.name].arrCPU_load = [];
-        hostResults[h.name].arrMemory_usage = [];
-        hostResults[h.name].arrFans_health= [];
-        hostResults[h.name].arrPower_usage= [];
-        hosts.push(h);
-        // console.log(att+" "+h.hpcc_rack+" "+h.hpcc_node);
-
-        // Compute RACK list
-        var rackIndex = isContainRack(racks, h.hpcc_rack);
-        if (rackIndex >= 0) {  // found the user in the users list
-            racks[rackIndex].hosts.push(h);
-        }
-        else {
-            var obj = {};
-            obj.id = h.hpcc_rack;
-            obj.hosts = [];
-            obj.hosts.push(h);
-            racks.push(obj);
-        }
-        // Sort RACK list
-        racks = racks.sort(function (a, b) {
-            if (a.id > b.id) {
-                return 1;
-            }
-            else return -1;
-        })
-    }
-
-    for (var i = 0; i < racks.length; i++)
-    {
-        racks[i].hosts.sort(function (a, b) {
-            if (a.hpcc_node > b.hpcc_node) {
-                return 1;
-            }
-            else return -1;
-        })
-
-    }
-
-    for (count = 0; count < hosts.length; count++)
-    {
-        var name = hosts[count].name;
-        json[name] = {};
-        d3.keys(serviceAttr).forEach(d=>serviceAttr[d].val.forEach(e=>json[name][e]=[]));
-        for (iteration = 0; iteration<sampleS[name].arrTemperature.length; iteration++){
-            step(iteration, count);
-            for (key in serviceAttr){
-                var attrkey = serviceAttr[key];
-                var result = processData(hostResults[name][key][iteration].data.service.plugin_output, attrkey.key);
-                attrkey.val.forEach((d,i)=>{
-                    json[name][d].push(result[i]);
+        function loadata(data,job){
+            data['timespan'] = data.timespan.map(d=>new Date(d3.timeFormat('%a %b %d %X CDT %Y')(new Date(d.replace('Z','')))));
+            sampleS = data;
+            sampleJobdata = job || [];
+            json = {};
+            recalculateCluster( {clusterMethod: 'leaderbin',normMethod:'l2',bin:{startBinGridSize: 4,range: [9,10]}},function(){
+                cluster_info.forEach(d=>(d.arr=[],d.__metrics.forEach(e=>(e.minval=undefined,e.maxval=undefined))));
+                hosts.forEach(h=>{
+                    json[h.name] = {};
+                    sampleS[h.name].arrcluster = sampleS.timespan.map((t,i)=>{
+                        serviceLists.map(a=> ((sampleS[h.name][serviceListattr[a.id]]||[])[i]||d3.range(0,a.sub.length).map(v=>null)).map((v,vi)=>
+                        {
+                            var value = v===null?undefined:v;
+                            if(!json[h.name][serviceListattr[a.id]]) {
+                                json[h.name][serviceListattr[a.id]] = [];
+                                hostResults[h.name][serviceListattr[a.id]] = [];
+                            }if(!json[h.name][serviceListattr[a.id]][i]) {
+                                json[h.name][serviceListattr[a.id]][i] = [];
+                                hostResults[h.name][serviceListattr[a.id]][i] = [];
+                            }
+                            json[h.name][serviceListattr[a.id]][i][vi] = value;
+                            hostResults[h.name][serviceListattr[a.id]][i][vi] = value;
+                            return  d3.scaleLinear().domain(a.sub[0].range)(value)||0;
+                        }));
+                        let axis_arr = _.flatten(serviceLists.map(a=> ((sampleS[h.name][serviceListattr[a.id]]||[])[i]||d3.range(0,a.sub.length).map(v=>null)).map(v=> d3.scaleLinear().domain(a.sub[0].range)(v===null?undefined:v)||0)));
+                        let index = 0;
+                        let minval = Infinity;
+                        cluster_info.forEach((c,i)=>{
+                            const val = distance(c.__metrics.normalize,axis_arr);
+                            if(minval>val){
+                                index = i;
+                                minval = val;
+                            }
+                        });
+                        cluster_info[index].total = 1 + cluster_info[index].total||0;
+                        cluster_info[index].__metrics.forEach((m,i)=>{
+                            if (m.minval===undefined|| m.minval>axis_arr[i])
+                                m.minval = axis_arr[i];
+                            if (m.maxval===undefined|| m.maxval<axis_arr[i])
+                                m.maxval = axis_arr[i];
+                        });
+                        return index;
+                        // return cluster_info.findIndex(c=>distance(c.__metrics.normalize,axis_arr)<=c.radius);
+                    })
                 });
-            }
+                cluster_info.forEach(c=>c.mse = ss.sum(c.__metrics.map(e=>(e.maxval-e.minval)*(e.maxval-e.minval))));
+                // loading data
+                hosts.forEach(h=> {
+                    // Compute RACK list
+                    var rackIndex = isContainRack(racks, h.hpcc_rack);
+                    if (rackIndex >= 0) {  // found the user in the users list
+                        racks[rackIndex].hosts.push(h);
+                    }
+                    else {
+                        var obj = {};
+                        obj.id = h.hpcc_rack;
+                        obj.hosts = [];
+                        obj.hosts.push(h);
+                        racks.push(obj);
+                    }
+                    // Sort RACK list
+                    racks = racks.sort(function (a, b) {
+                        if (a.id > b.id) {
+                            return 1;
+                        }
+                        else return -1;
+                    })
+                })
+
+                for (var i = 0; i < racks.length; i++)
+                {
+                    racks[i].hosts.sort(function (a, b) {
+                        if (a.hpcc_node > b.hpcc_node) {
+                            return 1;
+                        }
+                        else return -1;
+                    })
+
+                }
+                calback();
+            });
         }
-    }
-
-    // ngan
-    function step(iteration, count)
-    {
-        if( isRealtime )
-        {
-            return requestRT(iteration,count);
-        }
-        else
-        {
-            var selectedService = serviceList[0];
-
-            var result = simulateResults2(hosts[count].name,iteration, selectedService);
-            var name =  result.data.service.host_name;
-            hostResults[name].arr.push(result);
-            var result = simulateResults2(hosts[count].name,iteration, serviceList[0]);
-            hostResults[name].arrTemperature.push(result);
-
-            var result = simulateResults2(hosts[count].name,iteration, serviceList[1]);
-            hostResults[name].arrCPU_load.push(result);
-
-            var result = simulateResults2(hosts[count].name,iteration, serviceList[2]);
-            hostResults[name].arrMemory_usage.push(result);
-
-            var result = simulateResults2(hosts[count].name,iteration, serviceList[3]);
-            hostResults[name].arrFans_health.push(result);
-
-            var result = simulateResults2(hosts[count].name,iteration, serviceList[4]);
-            hostResults[name].arrPower_usage.push(result);
-        }
-    }
-
-    function simulateResults2(hostname,iter, s)
-    {
-        var newService;
-        if (s == serviceList[0])
-            newService = sampleS[hostname].arrTemperature[iter];
-        else if (s == serviceList[1])
-            newService = sampleS[hostname].arrCPU_load[iter];
-        else if (s == serviceList[2])
-            newService = sampleS[hostname].arrMemory_usage[iter];
-        else if (s == serviceList[3])
-            newService = sampleS[hostname].arrFans_health[iter];
-        else if (s == serviceList[4]) {
-            if (sampleS[hostname]["arrPower_usage"]== undefined) {
-                var simisval = handlemissingdata(hostname,iter);
-                sampleS[hostname]["arrPower_usage"] = [simisval];
-            }else if (sampleS[hostname]["arrPower_usage"][iter]== undefined){
-                var simisval = handlemissingdata(hostname,iter);
-                sampleS[hostname]["arrPower_usage"][iter] = simisval;
-            }
-            newService = sampleS[hostname]["arrPower_usage"][iter];
-        }
-
-        return newService;
-    }
-
-    function handlemissingdata(hostname,iter)
-    {
-        var simisval = jQuery.extend(true, {}, sampleS[hostname]["arrTemperature"][iter]);
-        var simval = processData(simisval.data.service.plugin_output, serviceList[0]);
-        // simval = (simval[0]+simval[1])/2;
-        simval = (simval[0]+simval[1]+20);
-        var tempscale = d3.scaleLinear().domain([thresholds[0][0],thresholds[0][1]]).range([thresholds[4][0],thresholds[4][1]]);
-        if (simval!==undefinedValue && !isNaN(simval) )
-        //simisval.data.service.plugin_output = "OK - The average power consumed in the last one minute = "+Math.round(tempscale(simval)*3.2)+" W";
-            simisval.data.service.plugin_output = "OK - The average power consumed in the last one minute = "+Math.floor(simval*3.2)+" W";
-        else
-            simisval.data.service.plugin_output = "UNKNOWN";
-        return simisval;
-    }
+    });
 }
 
 // INITS
@@ -591,6 +502,7 @@ function initHPCC()
 
 function initTimeRadar() {
     let presetPosition = {}
+    scene.updateMatrixWorld();
     for (let r in hostObj)
     {
         for (let h in hostObj[r])
@@ -598,6 +510,7 @@ function initTimeRadar() {
             presetPosition[`compute-${r}-${h}`] = hostObj[r][h][1].matrixWorld;
         }
     }
+    console.log(presetPosition)
     timeradar_zone = new TimeRadar3D();
     timeradar_zone.graphicopt({width: ROOM_SIZE,height:ROOM_SIZE,deep:ROOM_SIZE,presetPosition:presetPosition}).init(hosts)
 }
@@ -687,7 +600,7 @@ function initParallelSet()
         table.push(tmp);
     }
 
-    parallel_set = new ParallelSet( 0.25, FONT, table, "arrTemperatureCPU1", [], table[0] );
+    parallel_set = new ParallelSet( 0.25, FONT, table, "arrTemperature__1", [], table[0] );
     parallel_set.graph.position.set( ROOM_SIZE * 4.75, -0.15, -0.65 );
     parallel_set.graph.rotation.set( 0, -Math.PI/2, 0 );
     scene.add( parallel_set.graph );
@@ -718,4 +631,51 @@ function animate()
 function render()
 {
     renderer_css3d.render( scene, camera );
+}
+
+function realTimesetting (option,db,init,data){
+    isRealtime = option;
+    if (option){
+        processData = eval('processData_'+db);
+        simDuration = 200;
+        simDurationinit = 200;
+        numberOfMinutes = 26*60;
+    }else{
+        processData = db?eval('processData_'+db):processData_old;
+        simDuration =0;
+        simDurationinit = 0;
+        numberOfMinutes = 26*60;
+    }
+}
+
+function recalculateCluster (option,calback) {
+    group_opt = option;
+    distance = group_opt.normMethod==='l1'?distanceL1:distanceL2
+    if (clustercalWorker)
+        clustercalWorker.terminate();
+    clustercalWorker = new Worker ('../TimeRadar/src/script/worker/clustercal.js');
+    clustercalWorker.postMessage({
+        binopt:group_opt,
+        sampleS:sampleS,
+        hosts:hosts,
+        serviceFullList: serviceFullList,
+        serviceLists:serviceLists,
+        serviceList_selected:serviceList_selected,
+        serviceListattr:serviceListattr
+    });
+    clustercalWorker.addEventListener('message',({data})=>{
+        if (data.action==='done') {
+            cluster_info = data.result;
+            clusterDescription = {};
+            recomendName (cluster_info);
+            recomendColor (cluster_info);
+            if (!calback) {
+                // handle_clusterinfo();
+            }
+            clustercalWorker.terminate();
+            if (calback)
+                calback();
+        }
+    }, false);
+
 }

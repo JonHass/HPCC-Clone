@@ -510,15 +510,15 @@ function getDataByName(hostResults, name,startIndex, lastIndex, isPredict,undefi
             let indx = ser.index;
             var a;
             let requiredLength=  serviceLists[indx].sub.length;
-            try{
-                r[serviceListattr[indx]][stepIndex]
-            }catch(err){
-                console.log(serviceListattr)
-                console.log(indx)
-                console.log(serviceListattr[indx])
-                console.log(r[serviceListattr[indx]])
-            }
-            if (r[serviceListattr[indx]][stepIndex]) {
+            // try{
+            //     r[serviceListattr[indx]][stepIndex]
+            // }catch(err){
+            //     console.log(serviceListattr)
+            //     console.log(indx)
+            //     console.log(serviceListattr[indx])
+            //     console.log(r[serviceListattr[indx]])
+            // }
+            if (r[serviceListattr[indx]]&&r[serviceListattr[indx]][stepIndex]) {
                 a = r[serviceListattr[indx]][stepIndex].slice(0,requiredLength);
                 d3.range(0,requiredLength - a.length).forEach(d=> a.push(undefined));
             }
@@ -603,7 +603,7 @@ function inithostResults (worker) {
 }
 
 // Delete unnecessary files
-let processResult = processResult_old;
+// let processResult = processResult_old;
 // function processResult_influxdb(r,hostname,index){
 //     var obj = {};
 //     obj.result = {};
@@ -767,3 +767,174 @@ function current_userData () {
 function fixstr(s) {
     return s.replace(/ |#/gi,'');
 }
+function step (iteration, count){
+    if (isRealtime){
+        return requestRT(iteration,count);
+    }
+    else{
+        // var result = simulateResults(hosts[count].name);
+        var tmp = iteration;
+        for (i = 0; i < iterationstep; i++) {
+            var result = simulateResults2(hosts[count].name, iteration, selectedService);
+            // Process the result
+            var name = hosts[count].name;
+            hostResults[name].arr.push(result);
+            // console.log(hosts[count].name+" "+hostResults[name]);
+            serviceList_selected.forEach ((s)=>{
+                var result = simulateResults2(hosts[count].name, iteration, serviceLists[s.index].text);
+                hostResults[name][serviceListattr[s.index]].push(result);
+            });
+            if (typeof plotResult !=="undefined")
+                plotResult(result, name,iteration);
+            iteration++;
+        }
+        iteration = tmp;
+        return [iteration, count];
+    }
+    //return [iteration, count];
+}
+function simulateResults2(hostname,iter, s){
+    var newService;
+    let serviceIndex =  serviceList.findIndex(d=>d===s);
+    newService = (sampleS[hostname][serviceListattr[serviceIndex]]||[])[iter];
+    if (serviceIndex === 4) {
+        if (sampleS[hostname]["arrPower_usage"]=== undefined && db!=="influxdb"&& db!=="csv") {
+            var simisval = handlemissingdata(hostname,iter);
+            sampleS[hostname]["arrPower_usage"] = [simisval];
+            newService = simisval;
+        }else if (sampleS[hostname]["arrPower_usage"]!== undefined) {
+            if (sampleS[hostname]["arrPower_usage"][iter] === undefined && db !== "influxdb" && db !== "csv") {
+                var simisval = handlemissingdata(hostname, iter);
+                sampleS[hostname]["arrPower_usage"][iter] = simisval;
+            }
+            newService = sampleS[hostname]["arrPower_usage"][iter];
+        }
+    }
+    if (newService===undefined)
+        newService = [undefined];
+    else
+        newService = newService.map(d=>d===null?undefined:d);
+    return newService;
+}
+
+function handlemissingdata(hostname,iter){
+    // var simisval = jQuery.extend(true, {}, sampleS[hostname]["arrTemperature"][iter]);
+    var simisval = sampleS[hostname]["arrTemperature"][iter];
+    var simval = simisval.slice(0);
+    simval = (simval[0]+simval[1]+20);
+    if (simval!==undefinedValue && !isNaN(simval) )
+        simisval= [Math.floor(simval)];
+    else
+        simisval= [];
+    return simisval;
+}
+function recomendName (clusterarr){
+    clusterarr.forEach((c,i)=>{
+        c.index = i;
+        c.axis = [];
+        c.labels = ''+i;
+        c.name = `group_${i+1}`;
+        let zero_el = c.__metrics.filter(f=>!f.value);
+        let name='';
+        if (zero_el.length && zero_el.length<c.__metrics.normalize.length){
+            c.axis = zero_el.map(z=>{return{id:z.axis,description:'undefined'}});
+            name += `${zero_el.length} metric(s) undefined `;
+        }else if(zero_el.length===c.__metrics.normalize.length){
+            c.text = `undefined`;
+            if(!clusterDescription[c.name])
+                clusterDescription[c.name] = {};
+            clusterDescription[c.name].id = c.name;
+            clusterDescription[c.name].text = c.text;
+            return;
+        }
+        name += c.__metrics.filter(f=>f.value>0.75).map(f=>{
+            c.axis.push({id:f.axis,description:'high'});
+            return 'High '+f.axis;
+        }).join(', ');
+        name = name.trim();
+        if (name==='')
+            c.text = ``;
+        else
+            c.text = `${name}`;
+        if(!clusterDescription[c.name])
+            clusterDescription[c.name] = {};
+        clusterDescription[c.name].id = c.name;
+        clusterDescription[c.name].text = c.text;
+    });
+}
+
+function recomendColor (clusterarr) {
+    const colorCa = colorScaleList['customschemeCategory'].slice();
+    let colorcs = d3.scaleOrdinal().range(colorCa);
+    let colorarray = [];
+    let orderarray = [];
+    // clusterarr.filter(c=>!c.text.match('undefined'))
+    clusterarr.filter(c=>c.text!=='undefined')
+        .forEach(c=>{
+            colorarray.push(colorcs(c.name));
+            orderarray.push(c.name);
+        });
+    clusterarr.filter(c=>c.text==='undefined').forEach(c=>{
+        colorarray.push('black');
+        orderarray.push(c.name);
+    });
+    // clusterarr.filter(c=>c.text!=='undefined' && c.text.match('undefined')).forEach(c=>{
+    //     colorarray.push('#7f7f7f');
+    //     orderarray.push(c.name);
+    // });
+    colorCluster.range(colorarray).domain(orderarray)
+}
+
+function distanceL2(a, b){
+    let dsum = 0;
+    a.forEach((d,i)=> {dsum +=(d-b[i])*(d-b[i])});
+    return Math.round(Math.sqrt(dsum)*Math.pow(10, 10))/Math.pow(10, 10);
+}
+function distanceL1(a,b) {
+    let dsum = 0;
+    a.forEach((d,i)=> {dsum +=Math.abs(d-b[i])}); //modified
+    return Math.round(dsum*Math.pow(10, 10))/Math.pow(10, 10);
+}
+let colorScaleList = {
+    n: 7,
+    rainbow: ["#000066", "#4400ff", "#00ddff", "#00ddaa", "#00dd00", "#aadd00", "#ffcc00", "#ff8800", "#ff0000", "#660000"],
+    soil: ["#2244AA","#4A8FC2", "#76A5B1", "#9DBCA2", "#C3D392", "#F8E571", "#F2B659", "#eb6424", "#D63128", "#660000"],
+    customschemeCategory:  ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#bcbd22", "#17becf"],
+    customFunc: function(name,arr,num){
+        const n= num||this.n;
+        const arrColor = arr||this[name];
+        let colorLength = arrColor.length;
+        const arrThresholds=d3.range(0,colorLength).map(e=>e/(colorLength-1));
+        let colorTemperature = d3.scaleLinear()
+            .domain(arrThresholds)
+            .range(arrColor)
+            .interpolate(d3.interpolateHcl);
+
+        return d3.range(0,n).map(e=>colorTemperature(e/(n-1)))
+    },
+    d3colorChosefunc: function(name,num){
+        const n = num|| this.n;
+        if (d3[`scheme${name}`]) {
+            if (typeof (d3[`scheme${name}`][0]) !== 'string') {
+                colors = (d3[`scheme${name}`][n]||d3[`scheme${name}`][d3[`scheme${name}`].length-1]).slice();
+            }
+            else
+                colors=  d3[`scheme${name}`].slice();
+        } else {
+            const interpolate = d3[`interpolate${name}`];
+            colors = [];
+            for (let i = 0; i < n; ++i) {
+                colors.push(d3.rgb(interpolate(i / (n - 1))).hex());
+            }
+        }
+        colors = this.customFunc(undefined,colors,n);
+        return colors;
+    },
+},colorArr = {Radar: [
+        {val: 'rainbow',type:'custom',label: 'Rainbow'},
+        {val: 'RdBu',type:'d3',label: 'Blue2Red',invert:true},
+        {val: 'soil',type:'custom',label: 'RedYelBlu'},
+        {val: 'Viridis',type:'d3',label: 'Viridis'},
+        {val: 'Greys',type:'d3',label: 'Greys'}],
+    Cluster: [{val: 'Category10',type:'d3',label: 'D3'},{val: 'Paired',type:'d3',label: 'Blue2Red'}]};
+let colorCluster  = d3.scaleOrdinal().range(d3.schemeCategory10);
