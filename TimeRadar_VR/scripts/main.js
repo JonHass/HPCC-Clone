@@ -60,6 +60,7 @@ var tooltip;
 var service_control_panel;
 var time_control_panel;
 var score_control_panel;
+var timeradar_zone;
 var scatter_plot_matrix;
 var foo;
 var parallel_set;
@@ -154,6 +155,7 @@ function init()
     initControlPanel();
     initQuanah();
     initParallelSet();
+    initTimeRadar();
 
     if(isScagnostic)
         initScatterPlotMatrix();
@@ -167,6 +169,51 @@ function init()
 
 function loadJSON()
 {
+    srcpath = "HiperView"
+    d3.json(srcpath+'data/hotslist_Quanah.json').then(function(data){
+        hostList = data;
+        inithostResults();
+        let choiceinit = d3.select('#datacom').node().value;
+
+        if (choiceinit.includes('influxdb')) {
+            // processResult = processResult_influxdb;
+            db = "influxdb";
+            realTimesetting(false, "influxdb", true);
+        } else {
+            db = "nagios";
+            // processResult = processResult_old;
+            realTimesetting(false, undefined, true);
+        }
+        let choice = d3.select('#datacom').node().value;
+        dataInformation.filename = choice+".json";
+        d3.json(srcpath+"data/" + choice + ".json").then(function (data) {
+            if (error) {
+                M.toast({html: 'Local data does not exist, try to query from the internet!'});
+                d3.json("https://media.githubusercontent.com/media/iDataVisualizationLab/HPCC/master/HiperView/data/" + choiceinit + ".json", function (error, data) {
+                    if (error) throw error;
+                    d3.select(".currentDate")
+                        .text("" + d3.timeParse("%d %b %Y")(d3.select('#datacom').select('[selected="selected"]').text()).toDateString());
+                    loadata(data)
+                });
+                return;
+            }
+            d3.select(".currentDate")
+                .text("" + (new Date(data['timespan'][0]).toDateString()));
+            d3.json(srcpath + "data/" + choice + "_job_compact.json", function (error, job) {
+                if (error) {
+                    loadata(data, undefined);
+                    return;
+                }
+                loadata(data, job);
+                return;
+            });
+        })
+    });
+
+
+    let minTime = sampleS["compute-1-1"].arrTemperature[0].result.query_time;
+    let timescale = d3.scaleTime().range([0,sampleS['compute-1-1'].arrTemperature.length-1]).domain([new Date(sampleS["compute-1-1"].arrTemperature[0].result.query_time),new Date(sampleS["compute-1-1"].arrTemperature[sampleS["compute-1-1"].arrTemperature.length-1].result.query_time)]);
+    sampleS.timespan = d3.range(0,sampleS['compute-1-1'].arrTemperature.length).map(d=>timescale.invert(d));
     json = {};
 
     // loading data
@@ -540,6 +587,19 @@ function initHPCC()
         }
         return foundIndex;
     }
+}
+
+function initTimeRadar() {
+    let presetPosition = {}
+    for (let r in hostObj)
+    {
+        for (let h in hostObj[r])
+        {
+            presetPosition[`compute-${r}-${h}`] = hostObj[r][h][1].matrixWorld;
+        }
+    }
+    timeradar_zone = new TimeRadar3D();
+    timeradar_zone.graphicopt({width: ROOM_SIZE,height:ROOM_SIZE,deep:ROOM_SIZE,presetPosition:presetPosition}).init(hosts)
 }
 
 function initScatterPlotMatrix()

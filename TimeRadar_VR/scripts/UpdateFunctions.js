@@ -43,6 +43,12 @@ function updateValues( timestamp )
             // update scatterplot point per host (i.e. not per cpu)
             if(isScagnostic && cpu == 1 )
                 updateScatterPlotMatrix( "compute-"+rack+"-"+host, timestamp );
+
+            //updatetimeline
+            timeradar_zone.hosts(hosts).schema(serviceFullList).maxTimestep(timestamp);
+            timeradar_zone.clusterData(cluster_info).colorCluster(d3.scaleOrdinal().range(d3.schemeCategory10));
+            timeradar_zone.data([sampleS.timespan[0],sampleS.timespan[time]],timestamp)
+            timeradar_zone.draw()
         }
 
         if( cpu+1 <= CPU_NUM )

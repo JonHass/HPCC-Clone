@@ -1,14 +1,15 @@
 let TimeRadar3D = function() {
     let graphicopt = {
-            widthG: 100,
-            heightG: 100,
-            deepG: 100,
-            presetPosition: undefined
+            width: 1,
+            height: 1,
+            deep: 1,
+            presetPosition: undefined,
+            radaropt:{}
         }, runopt = {}, radarcreate,
         colorscale,
         g, first = true,
         dataRaw = [], data = [], arr = [],
-        Hosts = [],hostOb={};
+        Hosts = [],hostOb={},hostsGroupObject={};
 
     let master = {};
     let timebox, nodeg, schema = [];
@@ -27,7 +28,7 @@ let TimeRadar3D = function() {
     let timelineStep = 20;
     let timelineScale = d3.scaleLinear().range([-timelineStep,0]);
     //----------------------color----------------------
-    let colorCategory  = d3.scaleOrdinal().range(d3.schemeCategory20);
+    // let colorCategory  = d3.scaleOrdinal().range(d3.schemeCategory20);
     let colorCluster  = d3.scaleOrdinal().range(d3.schemeCategory10);
 
 
@@ -40,6 +41,7 @@ let TimeRadar3D = function() {
         Hosts.forEach(h=>{
             g.add(addTimeLine(h.name));
         });
+        scene.add(g);
         return master;
     };
     function addTimeLine (name){
@@ -48,7 +50,9 @@ let TimeRadar3D = function() {
             var timelineg = new THREE.Group();
             timelineg.name = name;
             timelineg.type = "timeline";
-            timelineg.position.set( position.x, position.y, position.z );
+            timelineg.position.setFromMatrixPosition(position);
+            hostsGroupObject[name] = {g: timelineg, line:[],radar:[]}
+            return timelineg
         }
     }
 
@@ -285,6 +289,11 @@ let TimeRadar3D = function() {
     }
     // draw section
     master.draw = function (){
+        //TODO update exist
+        clusterdata_timeline.forEach(d=>{
+            hostsGroupObject[d.name].data = d;
+        });
+
         if (!graphicopt.presetPosition)
             renderManual();
         master.drawComp();
@@ -302,118 +311,109 @@ let TimeRadar3D = function() {
         // xscale
         let newdata = handledata(data);
 
-        let bg = g.selectAll('.computeSig');
 
         if (!runopt.compute.bundle) {
             const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
             let datapoint;
-            if (!runopt.suddenGroup) {
-                datapoint = bg.selectAll(".linkLinegg").interrupt().data(d => d.timeline.clusterarr.map((e, i) => {
-                    temp = _.cloneDeep(newdata.find(n => n.name === e.cluster));
-                    temp.name = e.cluster;
-                    temp.timestep = e.timestep;
-                    if (!i)
-                        temp.hide = true;
-                    return temp;
-                }), d => d.name + d.timestep);
-            } else {
-                datapoint = bg.selectAll(".linkLinegg").data(d => d.timeline.clusterarr_sudden.map(e => {
-                    temp = _.cloneDeep(newdata.find(n => n.name === e.cluster));
-                    temp.name = e.cluster;
-                    temp.timestep = e.timestep;
-                    return temp;
-                }), d => d.name + d.timestep);
+            // if (!runopt.suddenGroup) {
+            //     for (let h in hostsGroupObject) {
+            //         let currentHost = hostsGroupObject[h];
+            //         currentHost.radar.data = currentHost.data.timeline.clusterarr.map((e, i) => {
+            //             temp = _.cloneDeep(newdata.find(n => n.name === e.cluster));
+            //             temp.name = e.cluster;
+            //             temp.timestep = e.timestep;
+            //             if (!i)
+            //                 temp.hide = true;
+            //             temp.id3Dname = e.name + e.timestep;
+            //             return temp;
+            //         });
+            //         currentHost.radar.data.forEach((d,i)=>{
+            //             createRadar(currentHost.radar[i], currentHost, newdata, radaropt).style('display', d.hide ? "none" : undefined);
+            //         })
+            //     }
+            // } else {
+            //     // ToDo later
+            //     // datapoint = bg.selectAll(".linkLinegg").data(d => d.timeline.clusterarr_sudden.map(e => {
+            //     //     temp = _.cloneDeep(newdata.find(n => n.name === e.cluster));
+            //     //     temp.name = e.cluster;
+            //     //     temp.timestep = e.timestep;
+            //     //     return temp;
+            //     // }), d => d.name + d.timestep);
+            // }
+
+            for (let h in hostsGroupObject) {
+                let currentHost = hostsGroupObject[h];
+                currentHost.line.data = currentHost.data.timeline.line
+                currentHost.line.data.forEach((d,i)=>{
+                    if (currentHost.line[i]){ // update
+                        currentHost.line[i].material.color = new THREE.Color( colorFunc(d.cluster) );
+                        currentHost.line[i].geometry.vertices[0] = new THREE.Vector3( fisheye_scale.x(timelineScale(d.start)), 0, 0); //start
+                        currentHost.line[i].geometry.vertices[1] = new THREE.Vector3( fisheye_scale.x(timelineScale(d.end)), 0, 0); //end
+                    }else{ // create new
+                        var material = new THREE.LineBasicMaterial( { color: colorFunc(d.cluster) } );
+                        var geometry = new THREE.Geometry();
+                        geometry.vertices.push(new THREE.Vector3( fisheye_scale.x(timelineScale(d.start)), 0, 0)); //start
+                        geometry.vertices.push(new THREE.Vector3( fisheye_scale.x(timelineScale(d.end)), 0, 0));
+                        currentHost.line[i] = new THREE.Line( geometry, material );
+                        currentHost.g.add(currentHost.line[i]);
+                    }
+                })
             }
 
-            let dataline = bg.selectAll(".linegg").data(d => d.timeline.line, d => d.cluster + '_' + d.start).attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`);
-            dataline
-                .attr('d', function (d) {
-                    return d3.line().curve(d3.curveMonotoneX).x(function (d) {
-                        return fisheye_scale.x(timelineScale(d))
-                    }).y(() => scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start, d.end + 1))
-                });
-            ;
-            dataline.exit().remove();
-            dataline.enter().append('path')
-                .attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`)
-                .attr('d', function (d) {
-                    return d3.line().curve(d3.curveMonotoneX).x(function (d) {
-                        return fisheye_scale.x(timelineScale(d))
-                    }).y(() => scaleNode_y_middle(d3.select(this.parentNode).datum().order))(d3.range(d.start, d.end + 1))
-                })
-                .merge(dataline)
-                .styles({
-                    stroke: d => colorFunc(d.cluster),
-                    'stroke-width': function (d) {
-                        return linkscale(d3.select(this.parentNode).datum().values_name.length)
-                    }
-                });
 
-            datapoint.exit().remove();
-            let datapoint_n = datapoint.enter().append('g')
-                .attr('class', 'linkLinegg timeline');
-            datapoint
-                .merge(datapoint_n).each(function (d, i) {
-                createRadar(d3.select(this).select('.linkLineg'), d3.select(this), newdata, radaropt).style('display', d.hide ? "none" : undefined);// hide 1st radar
-            });
-            datapoint_n.attr('transform', function (d) {
-                return `translate(${fisheye_scale.x(timelineScale(d.timestep))},${scaleNode_y_middle(d3.select(this.parentNode).datum().order)})`
-            });
-            datapoint.attr('transform', function (d) {
-                return `translate(${fisheye_scale.x(timelineScale(d.timestep))},${scaleNode_y_middle(d3.select(this.parentNode).datum().order)})`
-            });
-            bg.style('stroke-width', d => linkscale(d.values_name.length));
+            // bg.style('stroke-width', d => linkscale(d.values_name.length));
         }
         else {
-            let curveBundle = d3.line()
-                .curve(d3.curveMonotoneX)
-                .x(function (d) {
-                    return d[0];
-                })
-                .y(function (d) {
-                    return d[1];
-                });
-
-            bg.selectAll(".linkLinegg.timeline").remove();
-            let datacurve = bg.selectAll(".linegg").data(d => d.timeline.lineFull, d => d.cluster + '_' + d.start).attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`).style('fill', 'none');
-            datacurve
-                .attr("d", function (d, i) {
-                    const datap = d3.select(d3.select(this).node().parentNode).datum();
-                    let supportp = false;
-                    let data_path = d3.range(d.start, (d.end + 1) === maxTimestep ? (d.end + 1) : (d.end + 2)).map(e =>
-                        e > d.end ? (supportp = true, [fisheye_scale.x(timelineScale(e) - timelineStep * 0.5), scaleNode_y_middle(d.cluster, e, datap.name)]) : [fisheye_scale.x(timelineScale(e)), scaleNode_y_middle(d.cluster, e, datap.name)]
-                    );
-                    if (supportp)
-                        data_path.push([fisheye_scale.x(timelineScale(d.end + 1)), scaleNode_y_middle(datap.timeline.lineFull[i + 1].cluster, d.end + 1, datap.name)]);
-                    return curveBundle(data_path);
-                })
-            datacurve.exit().remove();
-            datacurve.enter()
-                .append('path')
-                .attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`)
-                .attr("d", function (d, i) {
-                    const datap = d3.select(d3.select(this).node().parentNode).datum();
-                    let supportp = false;
-                    let data_path = d3.range(d.start, (d.end + 1) === maxTimestep ? (d.end + 1) : (d.end + 2)).map(e =>
-                        e > d.end ? (supportp = true, [fisheye_scale.x(timelineScale(e) - timelineStep * 0.5), scaleNode_y_middle(d.cluster, e, datap.name)]) : [fisheye_scale.x(timelineScale(e)), scaleNode_y_middle(d.cluster, e, datap.name)]
-                    );
-                    if (supportp)
-                        data_path.push([fisheye_scale.x(timelineScale(d.end + 1)), scaleNode_y_middle(datap.timeline.lineFull[i + 1].cluster, d.end + 1, datap.name)]);
-                    return curveBundle(data_path);
-                })
-                .merge(datacurve)
-                .styles({
-                    stroke: d => colorFunc(d.cluster),
-                    'stroke-width': function (d) {
-                        return linkscale(d3.select(this.parentNode).datum().values_name.length)
-                    }
-                });
+            // TODO add this function later
+            // let curveBundle = d3.line()
+            //     .curve(d3.curveMonotoneX)
+            //     .x(function (d) {
+            //         return d[0];
+            //     })
+            //     .y(function (d) {
+            //         return d[1];
+            //     });
+            //
+            // bg.selectAll(".linkLinegg.timeline").remove();
+            // let datacurve = bg.selectAll(".linegg").data(d => d.timeline.lineFull, d => d.cluster + '_' + d.start).attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`).style('fill', 'none');
+            // datacurve
+            //     .attr("d", function (d, i) {
+            //         const datap = d3.select(d3.select(this).node().parentNode).datum();
+            //         let supportp = false;
+            //         let data_path = d3.range(d.start, (d.end + 1) === maxTimestep ? (d.end + 1) : (d.end + 2)).map(e =>
+            //             e > d.end ? (supportp = true, [fisheye_scale.x(timelineScale(e) - timelineStep * 0.5), scaleNode_y_middle(d.cluster, e, datap.name)]) : [fisheye_scale.x(timelineScale(e)), scaleNode_y_middle(d.cluster, e, datap.name)]
+            //         );
+            //         if (supportp)
+            //             data_path.push([fisheye_scale.x(timelineScale(d.end + 1)), scaleNode_y_middle(datap.timeline.lineFull[i + 1].cluster, d.end + 1, datap.name)]);
+            //         return curveBundle(data_path);
+            //     })
+            // datacurve.exit().remove();
+            // datacurve.enter()
+            //     .append('path')
+            //     .attr('class', d => `linegg timeline ${fixName2Class(d.cluster)}`)
+            //     .attr("d", function (d, i) {
+            //         const datap = d3.select(d3.select(this).node().parentNode).datum();
+            //         let supportp = false;
+            //         let data_path = d3.range(d.start, (d.end + 1) === maxTimestep ? (d.end + 1) : (d.end + 2)).map(e =>
+            //             e > d.end ? (supportp = true, [fisheye_scale.x(timelineScale(e) - timelineStep * 0.5), scaleNode_y_middle(d.cluster, e, datap.name)]) : [fisheye_scale.x(timelineScale(e)), scaleNode_y_middle(d.cluster, e, datap.name)]
+            //         );
+            //         if (supportp)
+            //             data_path.push([fisheye_scale.x(timelineScale(d.end + 1)), scaleNode_y_middle(datap.timeline.lineFull[i + 1].cluster, d.end + 1, datap.name)]);
+            //         return curveBundle(data_path);
+            //     })
+            //     .merge(datacurve)
+            //     .styles({
+            //         stroke: d => colorFunc(d.cluster),
+            //         'stroke-width': function (d) {
+            //             return linkscale(d3.select(this.parentNode).datum().values_name.length)
+            //         }
+            //     });
         }
         updateaxis();
     }
 
     function colorFunc (key){
-        return key===undefined?'black':colorCluster(key);
+        return d3.color(key===undefined?'black':colorCluster(key))+"";
     }
 
     function createRadar(datapoint, bg, newdata, customopt) {
@@ -435,23 +435,18 @@ let TimeRadar3D = function() {
         };
 
 
-        if (datapoint.empty()) {
-            datapoint = bg
-                .append("g")
-                .datum(d => newdata.find(n => n.name === d.name))
-                .attr("class", d => "compute linkLineg " + fixName2Class(d.name));
-
+        if (!datapoint) { //create object
+            datapoint = new THREE.group();
         }
 
         // replace thumnail with radar mini
-        datapoint.each(function (d) {
-            d3.select(this).attr('transform', `translate(${-radar_opt.w / 2},${-radar_opt.h / 2})`)
-            if (colorfill)
-                radar_opt.color = function () {
-                    return colorFunc(d.name)
-                };
-            RadarChart(this, [d], radar_opt, "");
-        });
+
+        if (colorfill)
+            radar_opt.color = function () {
+                return colorFunc(d.name)
+            };
+        RadarChart3D(datapoint, [d], radar_opt, "");
+
         return datapoint;
     }
 
@@ -549,7 +544,7 @@ let TimeRadar3D = function() {
     };
 
     master.hosts = function (a) {
-        return arguments.length ? (Hosts = _.cloneDeep( a),makeOb(), master) : Hosts;
+        return arguments.length ? (Hosts = _.cloneDeep(a),makeOb(), master) : Hosts;
     };
     master.svg = function (_) {
         return arguments.length ? (svg = _, master) : svg;
