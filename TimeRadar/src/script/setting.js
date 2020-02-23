@@ -16,7 +16,7 @@ srcpath = '../HiperView/';
 let jobMap_opt = {
     margin:{top:50,bottom:20,left:50,right:20},
     width: 1000,
-    height:500,
+    height:800,
     node:{
         r: 5,
     },
@@ -31,8 +31,8 @@ let jobMap_opt = {
         mini:true,
         levels:6,
         gradient:true,
-        w:40,
-        h:40,
+        w:200,
+        h:200,
         showText:false,
         margin: {top: 0, right: 0, bottom: 0, left: 0},
     },

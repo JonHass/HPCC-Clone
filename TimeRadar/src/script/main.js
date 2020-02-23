@@ -1956,6 +1956,8 @@ $( document ).ready(function() {
         reader.readAsDataURL(f);
     });
 
+
+
     // cluster init
     $('#clusterMethod').val(group_opt.clusterMethod);
     $('#startBinGridSize').val(group_opt.bin.startBinGridSize||10);
@@ -1981,7 +1983,8 @@ $( document ).ready(function() {
         //load data
         // d3.csv(srcpath+'data/cluster_27sep2018_9_kmean.csv',function(cluster){
         // d3.csv(srcpath+'data/cluster_27sep2018 _9.csv',function(cluster){
-        d3.csv(srcpath+'data/cluster_27sep2018_10_mse.csv',function(cluster){
+        // d3.csv(srcpath+'data/cluster_27sep2018_10_mse.csv',function(cluster){
+        d3.csv(srcpath+'data/clustermain.csv',function(cluster){
         // d3.csv(srcpath+'data/cluster_27sep2018 _11.csv',function(cluster){
             cluster.forEach(d=>{
                 d.radius = +d.radius;
@@ -2459,7 +2462,8 @@ function recomendColor (clusterarr) {
     //     colorarray.push('#7f7f7f');
     //     orderarray.push(c.name);
     // });
-    colorCluster.range(colorarray).domain(orderarray)
+    colorCluster.range(["#1f77b4", "#ff7f0e", "#cccccc", "#2ca02c", "#d62728", "#9467bd", "#cccccc"]).domain(orderarray)
+    // colorCluster.range(colorarray).domain(orderarray)
 }
 function handle_clusterinfo () {
     let data_info = [['Grouping Method:',group_opt.clusterMethod]];

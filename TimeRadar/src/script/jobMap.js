@@ -543,6 +543,7 @@ let JobMap = function() {
         if (!runopt.compute.bundle) {
             // const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
             const radaropt = {colorfill: colorfill, size: (scaleNode_y_middle(1) - scaleNode_y_middle(0)) * 2};
+            // const radaropt = {colorfill: colorfill, size: timelineStep*2};
             let datapoint;
             if (!runopt.suddenGroup) {
                 datapoint= bg.selectAll(".linkLinegg").interrupt().data(d => d.timeline.clusterarr.map((e,i) => {
@@ -820,7 +821,9 @@ let JobMap = function() {
             .attr('transform',`translate(${bg.datum().x2||bg.datum().x},${rangey[0]})`);
             // .attr('transform',`translate(${bg.datum().x2||bg.datum().x},${rangey[0]})`);
         let Maxis = axis.select('.gMainaxis')
-            .call(d3.axisTop(scale).tickSize(rangey[0]-rangey[1]).tickArguments([d3.timeHour.every(1)]).tickFormat(function(d,i){return i+1;}));
+            .call(d3.axisTop(scale).tickSize(rangey[0]-rangey[1]).tickArguments([d3.timeHour.every(1)])
+                // .tickFormat(function(d,i){return i+1;})
+            );
         Maxis.select('.domain').remove();
         let mticks =Maxis.selectAll('.tick');
         mticks
@@ -849,7 +852,7 @@ let JobMap = function() {
             Saxis.select('.domain').remove();
             let sticks = Saxis.selectAll('.tick').attr('transform',d=>`translate(${fisheye_scale.x(subaxis(d))},0)`);
             sticks.select('line').attr("vector-effect","non-scaling-stroke").style('stroke-width',0.1).style('stroke-dasharray','1 3')
-            sticks.select('text').style('font-size',8)
+            sticks.select('text').style('font-size',12)
         }
     }
 
@@ -963,8 +966,8 @@ let JobMap = function() {
                     computers.data().sort((a, b) => (+a.name) - (+b.name)).forEach((d, i) => d.order = i);
                 }
                 g.select('.host_title').classed('hide',true).attrs({'text-anchor': "end", 'x': 300, 'dy': -20}).text("Hosts's timeline");
-                // scaleNode_y_middle = d3.scaleLinear().range(yscale.range()).domain([0, computers.data().length - 1]);
-                scaleNode_y_middle = d3.scaleLinear().range([0,(computers.data().length - 1)*15]).domain([0, computers.data().length - 1]);
+                scaleNode_y_middle = d3.scaleLinear().range(yscale.range()).domain([0, computers.data().length - 1]);
+                // scaleNode_y_middle = d3.scaleLinear().range([0,(computers.data().length - 1)*15]).domain([0, computers.data().length - 1]);
 
                 g.selectAll('.computeNode.new').classed('new',false).attr('transform', d => {
                     d.x2 = graphicopt.widthG()-20;
@@ -1212,9 +1215,10 @@ let JobMap = function() {
         // updateTimebox(lastIndex,maxTimestep);
         timebox.classed('hide',runopt.compute.type==='timeline');
         // yscale = d3.scaleLinear().domain([-1,user.length]).range([0,graphicopt.heightG()]);
-        yscale = d3.scaleLinear().domain([-1,graphicopt.heightG()/20]).range([0,graphicopt.heightG()]);
+        yscale = d3.scaleLinear().domain([-1,graphicopt.heightG()/timelineStep]).range([0,graphicopt.heightG()]);
         // yscale = d3.scaleLinear().domain([-1,user.length]).range([0,Math.min(graphicopt.heightG(),30*(user.length))]);
         let deltey = yscale(1)-yscale(0);
+        console.log(deltey)
         if (runopt.compute.clusterNode&&clusterNode_data)
             scaleNode_y.domain([0,clusterNode_data.length-1]).range(yscale.range());
         scaleJob.domain([0,data.length-1]).range(yscale.range());
@@ -1383,7 +1387,7 @@ let JobMap = function() {
             computers.data().sort((a,b)=>a.y-b.y).forEach((d,i)=>d.order = i);
             if (runopt.compute.type==='timeline') {
                 // scaleNode_y_middle = d3.scaleLinear().range([yscale.range()[1]/2,yscale.range()[1]/2+10]).domain([computers.data().length/2,computers.data().length/2+1])
-                scaleNode_y_middle = d3.scaleLinear().range(yscale.range()).domain([0, computers.data().length-1])
+                scaleNode_y_middle = d3.scaleLinear().range(yscale.range()).domain([0, yscale.range()/timelineStep])
             }
             computers.transition().attr('transform', d => {
                 if (runopt.compute.type==='timeline') {
@@ -2021,7 +2025,22 @@ let JobMap = function() {
                                 timeline: hostOb[e].timeline,
                                 arr: hostOb[e].arrcluster,
                             }});
+                        clusterdata_timeline.sort((a,b)=>{
+                            let name = a.values_name[0];
+                            let a_sorce = data.findIndex(d=>d.nodes.find(e=>e===name));
+                            a_sorce *= user.findIndex(u=>data[a_sorce].user===u.key);
+                            name = b.values_name[0];
+                            let b_sorce = data.findIndex(d=>d.nodes.find(e=>e===name));
+                            b_sorce *= user.findIndex(u=>data[b_sorce].user===u.key);
+                            return b_sorce-a_sorce;
+
+                        });
+                        let markerIndex = clusterdata_timeline.findIndex(d=>d.values_name[0]==="compute-2-59")
+                        clusterdata_timeline = clusterdata_timeline.filter((d,i)=>i>=markerIndex && i<(markerIndex+29))
                         break;
+
+                        //order by job
+
                     case 'groupWithJob':
                     default:
                         data.forEach(d=>{

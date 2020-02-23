@@ -110,20 +110,20 @@ function clustercal(binopt,currentindex,callback){
 
     callback(cluster);
     // download_csv();
-    // function download_csv() {
-    //     var csv = csv_header.join(',')+'\n';
-    //     dataout.forEach(function(row) {
-    //         csv += row.join(',');
-    //         csv += "\n";
-    //     });
-    //
-    //     console.log(csv);
-    //     var hiddenElement = document.createElement('a');
-    //     hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-    //     hiddenElement.target = '_blank';
-    //     hiddenElement.download = 'cluster_27sep2018.csv';
-    //     hiddenElement.click();
-    // }
+    function download_csv() {
+        var csv = csv_header.join(',')+'\n';
+        dataout.forEach(function(row) {
+            csv += row.join(',');
+            csv += "\n";
+        });
+
+        console.log(csv);
+        var hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hiddenElement.target = '_blank';
+        hiddenElement.download = 'cluster_27sep2018.csv';
+        hiddenElement.click();
+    }
 
     // Object.keys(sampleS).forEach(h=>{
     //     delete sampleS[h].arrJob_scheduling;
