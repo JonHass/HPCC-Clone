@@ -2477,6 +2477,9 @@ let JobMap = function() {
 function calculateMSE(a,b){
     return ss.sum(a.map((d,i)=>(d.value-b[i].value)*(d.value-b[i].value)));
 }
+function calculateMSE_numarray(a,b){
+    return ss.sum(a.map((d,i)=>(d-b[i])*(d-b[i])));
+}
 // Establish the desired formatting options using locale.format():
 // https://github.com/d3/d3-time-format/blob/master/README.md#locale_format
 var formatMillisecond = d3.timeFormat(".%L"),

@@ -150,7 +150,7 @@ function newdatatoFormat (data){
     hostList ={data:{hostlist:{}}};
     // FIXME detect format
     const variables = _.without(Object.keys(data[0]),'timestamp','time');
-    data.forEach(d=>variables.forEach(k=>d[k] = d[k]===""?null:(+d[k]))) // format number
+    data.forEach(d=>variables.forEach(k=>d[k] = d[k]===""?null:(+d[k]<0.01)?(Math.round((+d[k])*10)/10):(+d[k]))) // format number
     let keys ={};
     variables.forEach((k,ki)=>{
         let split_string = k.split('-');
