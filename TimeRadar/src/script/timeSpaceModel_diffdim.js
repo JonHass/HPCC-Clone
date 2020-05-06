@@ -106,7 +106,7 @@ d3.TimeSpace = function () {
         isBusy = false,
         stop = false;
     let modelWorker,plotlyWorker,workerList=[],colorscale,reset;
-    let master={},solution,datain=[],filterbyClustername=[],visibledata,table_info,path,cluster=[],scaleTime;
+    let master={},solution,datain=[],filterbyClustername=[],visibledata,table_info,path,cluster=[],scaleTime,schema;
     let xscale=d3.scaleLinear(),yscale=d3.scaleLinear(), scaleNormalTimestep=d3.scaleLinear(),radarOpacityScale = d3.scaleLinear().range([0.1,1]);
     // grahic
     let camera,isOrthographic=false,scene,axesHelper,axesTime,gridHelper,controls,raycaster,INTERSECTED =[] ,mouse ,
@@ -274,7 +274,8 @@ d3.TimeSpace = function () {
         opt.dim = Math.floor(opt.dim);
         // end - adjust dimension
         datain.forEach(d=>delete d.__metrics.radar);
-        modelWorker.postMessage({action: "initDataRaw",opt:opt, value: datain,mask:  serviceFullList.map(d=>d.enable),labels: datain.map(d=>d.cluster), clusterarr: cluster.map(d=>d.__metrics.normalize)});
+        modelWorker.postMessage({action: "initDataRaw",opt:opt, value: datain,mask:  schema
+                .map(d=>d.enable),labels: datain.map(d=>d.cluster), clusterarr: cluster.map(d=>d.__metrics.normalize)});
         modelWorker.addEventListener('message', ({data}) => {
             switch (data.action) {
                 case "render":
@@ -1734,29 +1735,22 @@ d3.TimeSpace = function () {
                 dash: 'dot'
             }
         });
-        let cdata = datain.filter(d=>d.name===name);
-        
         let schema = [];
 
         if (shap[name]){
             let temp = shap[name].slice();
             temp.forEach((d,i)=>{d.index = i;d.total = d3.sum(d3.values(d.value))})
             temp.sort((a,b)=>d3.sum(d3.values(b.value)) - d3.sum(d3.values(a.value)));
-            schema= temp.map(d=>graphicopt.radaropt.schema[d.index])
+            schema= temp.map(d=>serviceFullList[d.index])
         }
         else
-            schema =graphicopt.radaropt.schema;
+            schema =serviceFullList;
         const data_in = schema.map((s,si) => {
             let temp = {x:[],
                 y:[],
                 text:[],
-                // mode: markerType(s.idroot),
                 mode: 'lines',
                 hovertemplate: '%{text}',
-                // marker:{
-                //     symbol:s.id
-                // },
-                // legendgroup: `group${s.idroot}`,
                 line:{
                     dash: lineType(s.idroot)
                 }
@@ -1815,7 +1809,7 @@ d3.TimeSpace = function () {
                 action: "initDataRaw",
                 // selectedData: selectedData,
                 namelist: namelist,
-                schema: graphicopt.radaropt.schema,
+                schema: serviceFullList,
                 serviceIndex: graphicopt.serviceIndex,
                 serviceListattr: serviceListattr,
                 hostResults: hostResults_temp,
@@ -2706,9 +2700,9 @@ d3.TimeSpace = function () {
                 }
             }
             if (graphicopt.radaropt)
-                graphicopt.radaropt.schema = serviceFullList;
+                graphicopt.radaropt.schema = schema;
             if (graphicopt.radarTableopt) {
-                graphicopt.radarTableopt.schema = serviceFullList;
+                graphicopt.radarTableopt.schema = schema;
             }
 
             createRadar = _.partialRight(createRadar_func,'timeSpace radar',graphicopt.radaropt,colorscale);
@@ -2729,7 +2723,7 @@ d3.TimeSpace = function () {
     };
 
     master.schema = function (_) {
-        return arguments.length ? (graphicopt.radaropt.schema = _,radarChartclusteropt.schema=_,schema = _, master) : schema;
+        return arguments.length ? (graphicopt.radaropt.schema = _,radarChartclusteropt.schema=_,graphicopt.radaropt.schema=_,graphicopt.radarTableopt.schema=_,schema = _, master) : schema;
     };
     master.dispatch = function (_) {
         return arguments.length ? (returnEvent = _, master) : returnEvent;

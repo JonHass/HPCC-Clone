@@ -2016,6 +2016,11 @@ function onSchemaUpdate(schema){
     });
     radarChartOptions.schema = serviceFullList;
     Radarplot.schema(serviceFullList,firstTime);
+    //timespace
+    tsneTS.schema(serviceFullList);
+    pcaTS.schema(serviceFullList);
+    umapTS.schema(serviceFullList);
+    bivariableTS.schema(serviceFullList);
     if (cluster_info){
         jobMap.schema(serviceFullList);
         radarChartclusteropt.schema = serviceFullList;}
@@ -2024,7 +2029,7 @@ function onSchemaUpdate(schema){
         MetricController.drawSummary();
         if (cluster_info) {
             cluster_map(cluster_info);
-            mainviz.redrawRadar()
+            mainviz.schema(serviceFullList).redrawRadar()
             // jobMap.draw();
         }
     }
