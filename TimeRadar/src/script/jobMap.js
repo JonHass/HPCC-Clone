@@ -1859,7 +1859,7 @@ let JobMap = function() {
         triggerCal_Cluster = triggerCluster||triggerCal_Cluster;
         if (timeStep_r) {
             last_timestep = new Date(timeStep_r.toString());
-            lastIndex = lastIndex_r
+            lastIndex = lastIndex_r;
             if (first__timestep>last_timestep)
                 first__timestep = last_timestep;
             deltaTime = (last_timestep - first__timestep)/maxTimestep;
@@ -1876,6 +1876,7 @@ let JobMap = function() {
             }
         });
         isLastTrigger = lastIndex===(maxTimestep-1);
+        let linkJob_obj = {};
         if (isLastTrigger) {
             animation_time = 2000;
             if (triggerCal_Cluster) {
@@ -1890,13 +1891,22 @@ let JobMap = function() {
             // data=dataRaw;
             // _.differenceBy(listallJobs.filter(l=>!l.endTime),dataRaw,'jobID').forEach(f=>f.endTime=last_timestep.toString()); //job has been ended
             listallJobs = _.unionBy(listallJobs, dataRaw, 'jobID');
+            linkJob_obj = {};
             data.forEach(d => {
                 d.name = d.jobID + '';
                 d.type = 'job';
                 d.nodes.forEach(n => {
                     let temp = {source: n, target: d.jobID + ''};
                     let temp2 = {source: d.jobID + '', target: d.user};
-
+                    if (linkJob_obj[d.jobID]) {
+                        linkJob_obj[d.jobID].target.push(temp);
+                        linkJob_obj[d.jobID].source.push(temp2);
+                    }else
+                        linkJob_obj[d.jobID] = {target:[temp],source:[temp2]};
+                    if (linkJob_obj[n]){
+                        linkJob_obj[n].source.push(temp);
+                    }else
+                        linkJob_obj[n] = {source:[temp]};
                     linkdata.push(temp);
                     if (linkdata.indexOf(temp2) === -1)
                         linkdata.push(temp2);
@@ -1947,7 +1957,8 @@ let JobMap = function() {
                         temp.nodes = _.uniq(_.flatten(group_temp_ob[k].map(g => g.nodes)));
                         let namearr = group_temp_ob[k].map(d => d.name);
                         temp.name = namearr.join(' ');
-                        let sameSource = linkdata.filter(e => namearr.find(f => f === e.source + ''));
+                        let sameSource = [];
+                        namearr.forEach(f => {if (linkJob_obj[''+f]) (linkJob_obj[''+f].source||[]).forEach(l=>sameSource.push(l))});
 
                         let temp_g = _.groupBy(sameSource, function (e) {
                             return e.target
@@ -1963,7 +1974,8 @@ let JobMap = function() {
                             });
                         });
 
-                        sameSource = linkdata.filter(e => namearr.find(f => f === e.target + ''));
+                        sameSource = [];
+                            namearr.forEach(f =>{if (linkJob_obj[''+f]) (linkJob_obj[''+f].target||[]).forEach(l=>sameSource.push(l))});
                         temp_g = _.groupBy(sameSource, function (e) {
                             return e.source
                         });
@@ -2007,7 +2019,9 @@ let JobMap = function() {
             clusterdata.forEach(c =>{
                 let namearr = c.arr[lastIndex];
                 if (namearr) {
-                    let sameSource = linkdata.filter(e => namearr.find(f => f === e.source + ''));
+                    let sameSource = [];
+                    // linkdata.filter(e => namearr.find(f => f === e.source + ''));
+                        namearr.forEach(f => {if (linkJob_obj[''+f]) (linkJob_obj[''+f].source||[]).forEach(l=>sameSource.push(l))});
                     let temp_g = _.groupBy(sameSource,function(e){return e.target});
                     Object.keys(temp_g).forEach(k=>{
                         temp_g[k].forEach((e,i)=>{

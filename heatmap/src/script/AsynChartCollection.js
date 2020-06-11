@@ -135,7 +135,7 @@ let AsynChartCollection = function (){
 function handle_data_heatmap () {
     preloader(true, 0,"Process data input for heatmap....");
     let data = [];
-    heatmapopt.height = heatmapopt.margin.top +heatmapopt.margin.bottom +1.5*hosts.length;
+    heatmapopt.height = heatmapopt.margin.top +heatmapopt.margin.bottom +300;
     // console.time('correlation compute: ')
     // const hostOrder = getComputeCorrelation(serviceFullList[0].text);
     // console.timeEnd('correlation compute: ')
@@ -149,7 +149,7 @@ function handle_data_heatmap () {
         sampleS.timespan.forEach((t, ti) => {
             let values = {};
             serviceLists.forEach((s, si) => {
-                s.sub.forEach((sub,subi)=>{
+                    s.sub.forEach((sub,subi)=>{
                     values[sub.text] = hostdata[serviceListattr[si]][ti][subi];
                 })
             });
@@ -162,26 +162,26 @@ function handle_data_heatmap () {
     });
 
     // rack
-    // const rackData = d3.nest().key(d=>d.rack).key(d=>d.timestep).rollup(d=>{
-    //     let values = {};
-    //     serviceFullList.forEach((s, si) => {
-    //     values[s.text] = d3.mean(d,e=>e[s.text]);})
-    //     values.timestep = d[0].timestep;
-    //     values.next = d[0].next;
-    //     values.compute = d[0].compute;
-    //     values.rack = d[0].rack;
-    //     return values;
-    // }).entries(data);
-    // data = [];
-    // rackData.forEach(d=>d.values.forEach(e=>data.push(e.value)));
+    const rackData = d3.nest().key(d=>d.rack).key(d=>d.timestep).rollup(d=>{
+        let values = {};
+        serviceFullList.forEach((s, si) => {
+        values[s.text] = d3.mean(d,e=>e[s.text]);})
+        values.timestep = d[0].timestep;
+        values.next = d[0].next;
+        values.compute = d[0].compute;
+        values.rack = d[0].rack;
+        return values;
+    }).entries(data);
+    data = [];
+    rackData.forEach(d=>d.values.forEach(e=>data.push(e.value)));
     // end rack
 
     console.timeEnd('extractData: ')
     let scheme = {
         data:{value:data},
         x: {key:'timestep',keyNext:'next',type:'Time', axis:{tickFormat: 'return multiFormat(datum)'}},
-        y: {key:'compute',type:'Band', axis:{tickValues:'return !(index%15)'}},
-        // y: {key:'rack',type:'Band'},
+        // y: {key:'compute',type:'Band', axis:{tickValues:'return !(index%15)'}},
+        y: {key:'rack',type:'Band'},
         mark:{type:"rect"},
         color:{key:undefined,type:"Linear",domain:[0,1]}
     };
